@@ -24,37 +24,22 @@ logger = logging.getLogger(__name__)
 # Heuristic filter constants
 # ---------------------------------------------------------------------------
 
-# Sentence-opening phrases that strongly signal opinion / meta-commentary
-# rather than a factual claim.
+# Sentence-opening phrases that strongly signal personal opinion.
+# Keep this list short — only clear non-factual openers.
 _OPINION_PREFIXES: tuple[str, ...] = (
     "i think",
     "i believe",
     "i feel",
     "in my opinion",
     "i would say",
-    "personally",
-    "it seems",
-    "it appears",
-    "arguably",
-    "perhaps",
-    "maybe",
-    "probably",
-    "you might",
-    "you could",
-    "it depends",
-    "this is just",
-    "keep in mind",
-    "note that",
-    "please note",
-    "it is worth",
-    "feel free",
+    "personally,",
 )
 
-# Sentences shorter than this (in words) are almost never standalone claims.
-_MIN_WORDS: int = 5
+# Sentences shorter than this (in words) are too vague to be a claim.
+_MIN_WORDS: int = 4
 
-# Sentences longer than this are likely run-ons or instructions, not claims.
-_MAX_WORDS: int = 80
+# Sentences longer than this are likely multi-clause run-ons.
+_MAX_WORDS: int = 100
 
 
 # ---------------------------------------------------------------------------
@@ -62,11 +47,7 @@ _MAX_WORDS: int = 80
 # ---------------------------------------------------------------------------
 
 def _split_sentences(text: str) -> list[str]:
-    """Split *text* into individual sentences.
-
-    Uses a regex-based splitter that handles common abbreviations (e.g.,
-    "Dr.", "U.S.") better than a naive ``split('.')``.
-    """
+    """Split *text* into individual sentences."""
     # Temporarily protect common abbreviations that contain periods.
     abbreviations = re.compile(
         r"\b(Mr|Mrs|Ms|Dr|Prof|Sr|Jr|vs|etc|e\.g|i\.e|U\.S|U\.K|approx|est)\.",
@@ -74,8 +55,8 @@ def _split_sentences(text: str) -> list[str]:
     )
     protected = abbreviations.sub(lambda m: m.group(0).replace(".", "<DOT>"), text)
 
-    # Split on sentence-ending punctuation followed by whitespace + capital.
-    raw_sentences = re.split(r"(?<=[.!?])\s+(?=[A-Z\"])", protected)
+    # Split on . ! ? followed by whitespace (capital or not).
+    raw_sentences = re.split(r"(?<=[.!?])\s+", protected)
 
     # Restore protected dots and strip whitespace.
     return [s.replace("<DOT>", ".").strip() for s in raw_sentences if s.strip()]
@@ -101,11 +82,9 @@ def _is_factual(sentence: str) -> bool:
     if sentence.rstrip().endswith("?"):
         return False
 
-    # Imperative-style sentences (commands / suggestions) are not claims.
-    # Heuristic: starts with a base-form verb common in instructions.
+    # Obvious imperative commands are not claims.
     imperative_starters = re.compile(
-        r"^(use|try|make|ensure|check|note|remember|consider|avoid|always|never"
-        r"|install|run|add|set|include|provide|follow|see|refer|visit|click)\b",
+        r"^(ensure|remember|note that|please|feel free|click|visit|refer to|see also)\b",
         re.IGNORECASE,
     )
     if imperative_starters.match(sentence):

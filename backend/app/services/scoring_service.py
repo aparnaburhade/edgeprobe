@@ -166,60 +166,44 @@ def _build_summary(
 # Public API
 # ---------------------------------------------------------------------------
 
-def compute_score(claims: list[dict[str, Any]]) -> dict[str, Any]:
-    """Compute a hallucination risk score from a list of evaluated claims.
+def compute_score(evaluated_claims: list[dict[str, Any]]) -> dict[str, Any]:
+    """Compute simple verdict counts and risk from evaluated claims.
 
-    Parameters
-    ----------
-    claims : list[dict]
-        Each dict should contain at minimum a ``"verdict"`` key with one of
-        ``"supported"``, ``"unsupported"``, ``"contradicted"``,
-        ``"unverifiable"``.  Produced by ``hallucination_detector.evaluate_claims``.
-
-    Returns
-    -------
-    dict with keys:
-
-    * ``hallucination_score`` – int in ``[0, 100]`` (higher = more hallucinated)
-    * ``risk_level``          – ``"low"``, ``"medium"``, or ``"high"``
-    * ``failure_type``        – dominant failure mode string
-    * ``summary``             – human-readable explanation
-
-    Raises
-    ------
-    ValueError
-        If *claims* is not a list.
+    Risk rules:
+    - any ``contradicted`` claim => ``high``
+    - otherwise, if unsupported claims are common (> 30%) => ``medium``
+    - otherwise => ``low``
     """
-    if not isinstance(claims, list):
-        raise ValueError("'claims' must be a list of dicts.")
+    if not isinstance(evaluated_claims, list):
+        raise ValueError("'evaluated_claims' must be a list of dicts.")
 
-    n_claims = len(claims)
+    counts = {
+        "supported": 0,
+        "unsupported": 0,
+        "contradicted": 0,
+        "unverifiable": 0,
+    }
 
-    if n_claims == 0:
-        logger.warning("compute_score called with an empty claims list.")
-        return {
-            "hallucination_score": 0,
-            "risk_level": _RISK_LOW,
-            "failure_type": "none",
-            "summary": "No claims were provided for evaluation.",
-        }
+    for item in evaluated_claims:
+        verdict = item.get("verdict", "unverifiable")
+        if verdict in counts:
+            counts[verdict] += 1
+        else:
+            counts["unverifiable"] += 1
 
-    counts = _count_verdicts(claims)
-    penalty_rate = _compute_penalty_rate(counts, n_claims)
-    score = round(penalty_rate * 100)
-    has_contradiction = counts["contradicted"] > 0
-    risk = _risk_level(score, has_contradiction)
-    failure = _failure_type(counts, n_claims)
-    summary = _build_summary(score, risk, failure, counts, n_claims)
+    total = len(evaluated_claims)
 
-    logger.debug(
-        "Scoring complete | score=%d  risk=%s  failure=%s  counts=%s",
-        score, risk, failure, counts,
-    )
+    if counts["contradicted"] > 0:
+        risk = "high"
+    elif total > 0 and (counts["unsupported"] / total) > 0.30:
+        risk = "medium"
+    else:
+        risk = "low"
 
     return {
-        "hallucination_score": score,
-        "risk_level": risk,
-        "failure_type": failure,
-        "summary": summary,
+        "supported": counts["supported"],
+        "unsupported": counts["unsupported"],
+        "contradicted": counts["contradicted"],
+        "unverifiable": counts["unverifiable"],
+        "risk": risk,
     }

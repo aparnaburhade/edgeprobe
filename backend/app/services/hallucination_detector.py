@@ -19,7 +19,6 @@ without changing the public interface.
 
 import re
 import logging
-from difflib import SequenceMatcher
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -74,26 +73,22 @@ def _split_sentences(text: str) -> list[str]:
     return [p.strip() for p in parts if p.strip()]
 
 
-def _jaccard(tokens_a: list[str], tokens_b: list[str]) -> float:
-    """Return the Jaccard similarity between two token lists."""
-    set_a, set_b = set(tokens_a), set(tokens_b)
-    if not set_a and not set_b:
+def _word_overlap(claim: str, sentence: str) -> int:
+    """Return the number of unique words shared between *claim* and *sentence*."""
+    claim_words = set(claim.lower().split())
+    sentence_words = set(sentence.lower().split())
+    return len(claim_words & sentence_words)
+
+
+def _overlap_score(claim: str, sentence: str) -> float:
+    """Normalise word overlap into a [0, 1] similarity score."""
+    claim_words = set(claim.lower().split())
+    sentence_words = set(sentence.lower().split())
+    if not claim_words and not sentence_words:
         return 0.0
-    return len(set_a & set_b) / len(set_a | set_b)
-
-
-def _sequence_similarity(a: str, b: str) -> float:
-    """Return SequenceMatcher ratio for two strings."""
-    return SequenceMatcher(None, a.lower(), b.lower()).ratio()
-
-
-def _combined_score(claim: str, sentence: str) -> float:
-    """Return a blended similarity score (Jaccard 60 % + sequence 40 %)."""
-    tokens_c = _tokenise(claim)
-    tokens_s = _tokenise(sentence)
-    jaccard = _jaccard(tokens_c, tokens_s)
-    seq = _sequence_similarity(claim, sentence)
-    return round(0.60 * jaccard + 0.40 * seq, 4)
+    overlap = len(claim_words & sentence_words)
+    # Normalise by the size of the larger set to keep scores comparable.
+    return round(overlap / max(len(claim_words), len(sentence_words)), 4)
 
 
 def _has_negation(tokens: list[str]) -> bool:
@@ -116,11 +111,11 @@ def _negation_asymmetry(claim_tokens: list[str], evidence_tokens: list[str]) -> 
 def _find_best_evidence(
     claim: str, reference_sentences: list[str]
 ) -> tuple[str, float]:
-    """Return the (sentence, score) pair with the highest similarity to *claim*."""
+    """Return the (sentence, score) with the highest word overlap to *claim*."""
     best_sentence = ""
     best_score = 0.0
     for sentence in reference_sentences:
-        score = _combined_score(claim, sentence)
+        score = _overlap_score(claim, sentence)
         if score > best_score:
             best_score = score
             best_sentence = sentence
@@ -148,8 +143,8 @@ def _assign_verdict(
         return VERDICT_UNVERIFIABLE, round(score, 4)
 
     # High overlap — check negation asymmetry.
-    claim_tokens = _tokenise(claim)
-    evidence_tokens = _tokenise(evidence)
+    claim_tokens = list(claim.lower().split())
+    evidence_tokens = list(evidence.lower().split())
 
     if _negation_asymmetry(claim_tokens, evidence_tokens):
         # One side negates; the other does not → contradiction.
