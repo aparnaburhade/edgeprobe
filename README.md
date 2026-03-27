@@ -78,19 +78,3 @@ EdgeProbe was built to explore the evaluation side of AI systems, not just gener
 ### Database
 - PostgreSQL
 - pgAdmin (for local database inspection)
-
-## Project Structure
-
-```text
-edgeprobe/
-├── backend/
-│   ├── app/
-│   │   ├── api/
-│   │   ├── db/
-│   │   └── services/
-│   ├── requirements.txt
-│   └── .env
-├── frontend/
-│   ├── src/
-│   └── package.json
-└── README.md
