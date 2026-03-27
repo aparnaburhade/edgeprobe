@@ -31,6 +31,7 @@ class ExecuteRequest(BaseModel):
 
 
 class ExecuteResponse(BaseModel):
+    prompt_text: str
     response_text: str
     claims: list[dict]
     score: dict
@@ -144,4 +145,9 @@ def execute_run(request: ExecuteRequest) -> ExecuteResponse:
     finally:
         db.close()
 
-    return ExecuteResponse(response_text=response_text, claims=evaluated_claims, score=score)
+    return ExecuteResponse(
+        prompt_text=prompt_text,
+        response_text=response_text,
+        claims=evaluated_claims,
+        score=score,
+    )
