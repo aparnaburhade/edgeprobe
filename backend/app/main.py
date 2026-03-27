@@ -1,10 +1,19 @@
 from fastapi import FastAPI
-
+from fastapi.middleware.cors import CORSMiddleware
 from .api.routes_runs import router as routes_runs
 from .api.routes import router as prompts_router
 from app.db.database import SessionLocal
 
 app = FastAPI()
+
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Adjust this to your frontend's origin in production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # include runs routes
 app.include_router(routes_runs, prefix="/runs", tags=["Runs"])
