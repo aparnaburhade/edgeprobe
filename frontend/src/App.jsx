@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-// ── Design tokens ──────────────────────────────────────────────
+// -- Design tokens ----------------------------------------------
 const PURPLE      = "#7c3aed";
 const GRAY_BG     = "#f4f5f7";
 const GRAY_BORDER = "#e8e8ed";
@@ -11,7 +11,7 @@ const TEXT_MUTED  = "#6b7280";
 const TEXT_FAINT  = "#9ca3af";
 const WHITE       = "#ffffff";
 
-// ── Style map ─────────────────────────────────────────────────
+// -- Style map --------------------------------------------------
 const S = {
   page: {
     minHeight: "100vh",
@@ -27,7 +27,7 @@ const S = {
     gap: "14px",
     padding: "20px 32px",
     backgroundColor: WHITE,
-    borderBottom: `1px solid ${GRAY_BORDER}`,
+    borderBottom: '1px solid ' + GRAY_BORDER,
   },
   headerIcon: {
     width: "38px",
@@ -148,6 +148,12 @@ const S = {
     margin: 0,
     lineHeight: "1.65",
   },
+  inputExample: {
+    fontSize: "12.5px",
+    color: TEXT_FAINT,
+    margin: "2px 0 0",
+    lineHeight: "1.65",
+  },
   demoRow: {
     marginTop: "10px",
     display: "flex",
@@ -163,7 +169,7 @@ const S = {
     lineHeight: "1.65",
   },
   secondaryBtn: {
-    border: `1px solid ${GRAY_BORDER}`,
+    border: '1px solid ' + GRAY_BORDER,
     backgroundColor: WHITE,
     color: TEXT_MID,
     borderRadius: "9px",
@@ -201,6 +207,39 @@ const S = {
   },
   btnDisabled: { opacity: 0.55, cursor: "not-allowed" },
 
+  // Error box
+  errorBox: {
+    backgroundColor: "#fef2f2",
+    border: "1px solid #fca5a5",
+    borderRadius: "10px",
+    padding: "12px 16px",
+    marginTop: "10px",
+    fontSize: "13px",
+    color: "#b91c1c",
+    lineHeight: "1.65",
+    fontWeight: "500",
+  },
+
+  // Demo tip box
+  demoTipBox: {
+    backgroundColor: "#f0f9ff",
+    border: "1px solid #bfdbfe",
+    borderRadius: "10px",
+    padding: "14px 16px",
+    marginTop: "14px",
+    fontSize: "12.5px",
+    color: "#0369a1",
+    lineHeight: "1.7",
+  },
+  demoTipTitle: {
+    fontSize: "12px",
+    fontWeight: "700",
+    color: "#0369a1",
+    textTransform: "uppercase",
+    letterSpacing: "0.5px",
+    margin: "0 0 6px",
+  },
+
   // Empty state
   empty: {
     display: "flex",
@@ -213,7 +252,7 @@ const S = {
     width: "60px",
     height: "60px",
     backgroundColor: WHITE,
-    border: `1px solid ${GRAY_BORDER}`,
+    border: '1px solid ' + GRAY_BORDER,
     borderRadius: "14px",
     display: "flex",
     alignItems: "center",
@@ -235,7 +274,7 @@ const S = {
     lineHeight: "1.75",
   },
 
-  // ── Result layout
+  // -- Result layout
   resultWrap: {
     marginTop: "12px",
     width: "100%",
@@ -285,7 +324,7 @@ const S = {
     justifyContent: "space-between",
     marginBottom: "18px",
     paddingBottom: "16px",
-    borderBottom: `1px solid ${GRAY_BORDER}`,
+    borderBottom: '1px solid ' + GRAY_BORDER,
   },
   riskLabel: { fontSize: "13px", fontWeight: "600", color: TEXT_MUTED },
   riskPill: {
@@ -329,7 +368,7 @@ const S = {
     gap: "12px",
   },
   claimCard: {
-    border: `1px solid ${GRAY_BORDER}`,
+    border: '1px solid ' + GRAY_BORDER,
     borderRadius: "10px",
     padding: "14px 16px",
     backgroundColor: "#fafafa",
@@ -352,7 +391,7 @@ const S = {
   evidenceWrap: {
     marginTop: "4px",
     paddingTop: "8px",
-    borderTop: `1px dashed ${GRAY_BORDER}`,
+    borderTop: '1px dashed ' + GRAY_BORDER,
   },
   evidenceLabel: {
     fontSize: "10px",
@@ -391,7 +430,7 @@ const S = {
   },
 };
 
-// ── Verdict colours ────────────────────────────────────────────
+// -- Verdict colours --------------------------------------------
 const VERDICT_STYLE = {
   supported:    { color: "#059669", bg: "#ecfdf5", border: "#6ee7b7" },
   unsupported:  { color: "#d97706", bg: "#fffbeb", border: "#fcd34d" },
@@ -404,7 +443,7 @@ const RISK_PILL = {
   high:   { color: "#dc2626", bg: "#fef2f2" },
 };
 
-// ── VerdictBadge ───────────────────────────────────────────────
+// -- VerdictBadge -----------------------------------------------
 function VerdictBadge({ verdict = "unverifiable" }) {
   const key = verdict.toLowerCase();
   const vs  = VERDICT_STYLE[key] ?? VERDICT_STYLE.unverifiable;
@@ -415,7 +454,7 @@ function VerdictBadge({ verdict = "unverifiable" }) {
       padding: "3px 10px",
       borderRadius: "20px",
       whiteSpace: "nowrap",
-      border: `1px solid ${vs.border}`,
+      border: '1px solid ' + vs.border,
       backgroundColor: vs.bg,
       color: vs.color,
       textTransform: "uppercase",
@@ -427,7 +466,7 @@ function VerdictBadge({ verdict = "unverifiable" }) {
   );
 }
 
-// ── PromptSection ──────────────────────────────────────────────
+// -- PromptSection ----------------------------------------------
 function PromptSection({ promptText }) {
   const hasPrompt = typeof promptText === "string" && promptText.trim().length > 0;
   return (
@@ -446,7 +485,7 @@ function PromptSection({ promptText }) {
   );
 }
 
-// ── ResponseSection ────────────────────────────────────────────
+// -- ResponseSection --------------------------------------------
 function ResponseSection({ text }) {
   if (!text) return null;
   return (
@@ -459,7 +498,7 @@ function ResponseSection({ text }) {
   );
 }
 
-// ── ScoreSection ───────────────────────────────────────────────
+// -- ScoreSection -----------------------------------------------
 function ScoreSection({ score }) {
   if (!score) return null;
   const risk = (score.risk ?? "low").toLowerCase();
@@ -493,7 +532,7 @@ function ScoreSection({ score }) {
   );
 }
 
-// ── ClaimsSection ──────────────────────────────────────────────
+// -- ClaimsSection ----------------------------------------------
 function ClaimCard({ claim }) {
   const pct = Math.round((claim.confidence ?? 0) * 100);
   const key = (claim.verdict ?? "unverifiable").toLowerCase();
@@ -514,7 +553,7 @@ function ClaimCard({ claim }) {
         <div style={S.confBarTrack}>
           <div style={{
             height: "100%",
-            width: `${pct}%`,
+            width: pct + "%",
             backgroundColor: vs.color,
             borderRadius: "2px",
             transition: "width 0.4s ease",
@@ -547,25 +586,56 @@ function ClaimsSection({ claims }) {
   );
 }
 
-// ── App ────────────────────────────────────────────────────────
+// -- App --------------------------------------------------------
 function App() {
   const [promptId, setPromptId] = useState("");
   const [result,   setResult]   = useState(null);
   const [loading,  setLoading]  = useState(false);
+  const [error,    setError]    = useState(null);
+
+  const sanitizeError = (raw) => {
+    if (!raw) return "Something went wrong. Please try again.";
+    const lower = raw.toLowerCase();
+    if (lower.includes("not found") || lower.includes("no prompt") || lower.includes("404"))
+      return "No prompt found for this ID. Try a valid prompt ID.";
+    if (lower.includes("network") || lower.includes("fetch") || lower.includes("failed to fetch"))
+      return "Cannot reach the backend. Make sure the server is running.";
+    if (lower.includes("500") || lower.includes("internal server"))
+      return "The server encountered an error. Please try again.";
+    return "Something went wrong. Please check the prompt ID and try again.";
+  };
 
   const runEvaluation = async () => {
-    if (!promptId) return;
+    if (!promptId.trim()) {
+      setError("Please enter a prompt ID.");
+      return;
+    }
+
     setLoading(true);
+    setError(null);
+    setResult(null);
+
     try {
       const response = await fetch("http://127.0.0.1:8000/runs/execute", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt_id: Number(promptId) }),
       });
+
       const data = await response.json();
+
+      if (!response.ok) {
+        const raw = data?.detail || ("Error: " + response.status);
+        setError(sanitizeError(raw));
+        console.error("API error:", raw);
+        return;
+      }
+
       setResult(data);
-    } catch (error) {
-      console.error("Error running evaluation:", error);
+      setError(null);
+    } catch (err) {
+      setError(sanitizeError(err.message));
+      console.error("Error running evaluation:", err);
     } finally {
       setLoading(false);
     }
@@ -576,7 +646,7 @@ function App() {
   return (
     <div style={S.page}>
 
-      {/* ── Header ───────────────────────────────── */}
+      {/* -- Header --------------------------------- */}
       <header style={S.header}>
         <div style={S.headerIcon}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -591,7 +661,7 @@ function App() {
         </div>
       </header>
 
-      {/* ── Main ─────────────────────────────────── */}
+      {/* -- Main ----------------------------------- */}
       <main style={S.main}>
 
         {/* Tool explanation */}
@@ -621,13 +691,13 @@ function App() {
           </p>
           <div style={S.inputBlock}>
             <p style={S.inputLabel}>Prompt ID</p>
-            <p style={S.inputHelper}>Use the ID of a previously generated test prompt</p>
+            <p style={S.inputExample}>Use the sample button</p>
             <div style={S.inputRow}>
               <input
                 type="number"
                 placeholder="Enter Prompt ID (e.g., 5)"
                 value={promptId}
-                onChange={(e) => setPromptId(e.target.value)}
+                onChange={(e) => { setPromptId(e.target.value); setError(null); }}
                 onKeyDown={(e) => e.key === "Enter" && !isDisabled && runEvaluation()}
                 style={S.input}
                 onFocus={(e) => (e.target.style.borderColor = PURPLE)}
@@ -638,11 +708,18 @@ function App() {
                 disabled={isDisabled}
                 style={{ ...S.btnBase, ...(isDisabled ? S.btnDisabled : {}) }}
               >
-                {loading ? "Analyzing…" : "Analyze"}
+                {loading ? "Analyzing..." : "Analyze"}
               </button>
             </div>
+            
+            {/* Error message */}
+            {error && (
+              <div style={S.errorBox}>
+                {error}
+              </div>
+            )}
+            
             <div style={S.demoRow}>
-              <p style={S.demoHint}>Example: try a prompt ID you generated earlier in the backend</p>
               <button
                 type="button"
                 style={S.secondaryBtn}
@@ -652,10 +729,18 @@ function App() {
                 Use Sample ID
               </button>
             </div>
+
+            {/* Demo tip */}
+            <div style={S.demoTipBox}>
+              <p style={S.demoTipTitle}>Demo Tip</p>
+              <p style={{ margin: 0, lineHeight: "1.7" }}>
+                'Use Sample ID' to try a sample.
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* Results ── or ── empty state */}
+        {/* Results -- or -- empty state */}
         {result ? (
           <div style={S.resultWrap}>
             <PromptSection   promptText={result.prompt_text} />
