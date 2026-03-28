@@ -1,4 +1,18 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+
+const API_BASE = (import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000").replace(
+  /\/$/,
+  "",
+);
+
+const DOMAINS = ["general", "healthcare", "coding"];
+const CATEGORIES = [
+  "ambiguity",
+  "misleading_context",
+  "near_fact",
+  "insufficient_info",
+  "multi_hop",
+];
 
 // -- Design tokens ----------------------------------------------
 const PURPLE      = "#7c3aed";
@@ -360,6 +374,115 @@ const S = {
     textTransform: "uppercase",
     letterSpacing: "0.4px",
   },
+  scoreMeterRow: {
+    display: "flex",
+    alignItems: "baseline",
+    gap: "12px",
+    marginBottom: "14px",
+  },
+  scoreMeterValue: {
+    fontSize: "36px",
+    fontWeight: "800",
+    color: TEXT_DARK,
+    letterSpacing: "-1px",
+    lineHeight: 1,
+  },
+  scoreMeterHint: {
+    fontSize: "12px",
+    color: TEXT_FAINT,
+    fontWeight: "500",
+    flex: 1,
+  },
+  summaryPara: {
+    margin: "0 0 12px",
+    fontSize: "13.5px",
+    color: TEXT_MID,
+    lineHeight: 1.75,
+    fontWeight: "450",
+  },
+  failureType: {
+    fontSize: "11px",
+    color: TEXT_FAINT,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: "0.4px",
+    margin: 0,
+  },
+  selectControl: {
+    width: "100%",
+    padding: "10px 12px",
+    backgroundColor: GRAY_INPUT,
+    border: "1.5px solid transparent",
+    borderRadius: "10px",
+    fontSize: "13px",
+    color: TEXT_DARK,
+    fontFamily: "inherit",
+    cursor: "pointer",
+  },
+  genSection: {
+    marginTop: "22px",
+    paddingTop: "22px",
+    borderTop: "1px solid " + GRAY_BORDER,
+  },
+  genTitle: {
+    fontSize: "14px",
+    fontWeight: "650",
+    color: TEXT_DARK,
+    margin: "0 0 12px",
+  },
+  genGrid: {
+    display: "grid",
+    gap: "12px",
+  },
+  catGrid: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "8px",
+  },
+  catChip: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "6px",
+    fontSize: "12px",
+    color: TEXT_MID,
+    fontWeight: "500",
+    cursor: "pointer",
+    userSelect: "none",
+  },
+  genActions: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    flexWrap: "wrap",
+    marginTop: "4px",
+  },
+  genOk: {
+    fontSize: "12.5px",
+    color: "#047857",
+    margin: 0,
+    lineHeight: 1.6,
+  },
+  inlineField: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "6px",
+  },
+  smallLabel: {
+    fontSize: "12px",
+    color: TEXT_MID,
+    fontWeight: "600",
+    margin: 0,
+  },
+  countInput: {
+    width: "72px",
+    padding: "8px 10px",
+    backgroundColor: GRAY_INPUT,
+    border: "1.5px solid transparent",
+    borderRadius: "8px",
+    fontSize: "14px",
+    color: TEXT_DARK,
+    fontFamily: "inherit",
+  },
 
   // Claims
   claimsList: {
@@ -503,6 +626,7 @@ function ScoreSection({ score }) {
   if (!score) return null;
   const risk = (score.risk ?? "low").toLowerCase();
   const rp   = RISK_PILL[risk] ?? RISK_PILL.low;
+  const hs   = score.hallucination_score;
   const stats = [
     { num: score.supported    ?? 0, label: "Supported"    },
     { num: score.unsupported  ?? 0, label: "Unsupported"  },
@@ -513,13 +637,25 @@ function ScoreSection({ score }) {
     <div>
       <p style={S.sectionLabel}>Evaluation Score</p>
       <div style={S.sectionCard}>
+        {typeof hs === "number" && (
+          <div style={S.scoreMeterRow}>
+            <span style={S.scoreMeterValue}>{hs}</span>
+            <span style={S.scoreMeterHint}>
+              Hallucination index (0 = best, 100 = worst). Based on claim verdicts vs reference text.
+            </span>
+          </div>
+        )}
         <div style={S.riskRow}>
           <span style={S.riskLabel}>Overall Risk</span>
           <span style={{ ...S.riskPill, color: rp.color, backgroundColor: rp.bg }}>
             {risk.toUpperCase()} RISK
           </span>
         </div>
-        <div style={S.statsGrid}>
+        {score.summary && <p style={S.summaryPara}>{score.summary}</p>}
+        {score.failure_type && score.failure_type !== "none" && (
+          <p style={S.failureType}>Failure mode: {String(score.failure_type).replace(/_/g, " ")}</p>
+        )}
+        <div style={{ ...S.statsGrid, marginTop: score.summary ? "14px" : 0 }}>
           {stats.map(({ num, label }) => (
             <div key={label} style={S.statBox}>
               <span style={S.statNum}>{num}</span>
@@ -578,7 +714,7 @@ function ClaimsSection({ claims }) {
       <div style={S.sectionCard}>
         <div style={S.claimsList}>
           {claims.map((claim, i) => (
-            <ClaimCard key={i} claim={claim} />
+            <ClaimCard key={`${claim.claim_text ?? ""}-${i}`} claim={claim} />
           ))}
         </div>
       </div>
@@ -589,17 +725,48 @@ function ClaimsSection({ claims }) {
 // -- App --------------------------------------------------------
 function App() {
   const [promptId, setPromptId] = useState("");
+  const [prompts, setPrompts]   = useState([]);
+  const [listLoading, setListLoading] = useState(false);
   const [result,   setResult]   = useState(null);
   const [loading,  setLoading]  = useState(false);
   const [error,    setError]    = useState(null);
 
+  const [genDomain, setGenDomain] = useState("general");
+  const [genCats, setGenCats]     = useState(() => [...CATEGORIES]);
+  const [genCount, setGenCount]   = useState(3);
+  const [genLoading, setGenLoading] = useState(false);
+  const [genNotice, setGenNotice]   = useState(null);
+
+  const loadPrompts = useCallback(async () => {
+    setListLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/prompts/`);
+      if (!res.ok) throw new Error(`List failed: ${res.status}`);
+      const data = await res.json();
+      setPrompts(Array.isArray(data.prompts) ? data.prompts : []);
+    } catch (e) {
+      console.error(e);
+      setPrompts([]);
+    } finally {
+      setListLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadPrompts();
+  }, [loadPrompts]);
+
   const sanitizeError = (raw) => {
     if (!raw) return "Something went wrong. Please try again.";
-    const lower = raw.toLowerCase();
+    const lower = String(raw).toLowerCase();
     if (lower.includes("not found") || lower.includes("no prompt") || lower.includes("404"))
       return "No prompt found for this ID. Try a valid prompt ID.";
+    if (lower.includes("503") || lower.includes("service unavailable") || lower.includes("openai_api_key"))
+      return "The model is unavailable. Check OPENAI_API_KEY on the server and try again.";
+    if (lower.includes("502") || lower.includes("bad gateway") || lower.includes("llm service"))
+      return "The AI provider returned an error. Try again in a moment.";
     if (lower.includes("network") || lower.includes("fetch") || lower.includes("failed to fetch"))
-      return "Cannot reach the backend. Make sure the server is running.";
+      return "Cannot reach the backend. Check VITE_API_BASE_URL or that the API is running.";
     if (lower.includes("500") || lower.includes("internal server"))
       return "The server encountered an error. Please try again.";
     return "Something went wrong. Please check the prompt ID and try again.";
@@ -610,23 +777,28 @@ function App() {
       setError("Please enter a prompt ID.");
       return;
     }
+    const pid = Math.floor(Number(promptId));
+    if (!Number.isFinite(pid) || pid < 1) {
+      setError("Enter a positive integer prompt ID.");
+      return;
+    }
 
     setLoading(true);
     setError(null);
     setResult(null);
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/runs/execute", {
+      const response = await fetch(`${API_BASE}/runs/execute`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt_id: Number(promptId) }),
+        body: JSON.stringify({ prompt_id: pid }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
         const raw = data?.detail || ("Error: " + response.status);
-        setError(sanitizeError(raw));
+        setError(sanitizeError(typeof raw === "string" ? raw : JSON.stringify(raw)));
         console.error("API error:", raw);
         return;
       }
@@ -641,7 +813,63 @@ function App() {
     }
   };
 
-  const isDisabled = loading || !promptId;
+  const toggleGenCat = (c) => {
+    setGenCats((prev) => {
+      if (prev.includes(c)) {
+        if (prev.length <= 1) return prev;
+        return prev.filter((x) => x !== c);
+      }
+      return [...prev, c];
+    });
+  };
+
+  const runGenerate = async () => {
+    setGenNotice(null);
+    const n = Math.min(100, Math.max(1, Math.floor(Number(genCount)) || 1));
+    setGenCount(n);
+    setGenLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/prompts/generate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          domain: genDomain,
+          categories: genCats,
+          count: n,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        const raw = data?.detail ?? res.statusText;
+        setGenNotice({ ok: false, text: typeof raw === "string" ? raw : JSON.stringify(raw) });
+        return;
+      }
+      const created = data.prompts ?? [];
+      const ids = created.map((p) => p.id).filter((id) => id != null);
+      await loadPrompts();
+      if (ids.length) {
+        setPromptId(String(ids[0]));
+        setGenNotice({
+          ok: true,
+          text:
+            ids.length === 1
+              ? `Saved prompt #${ids[0]}. You can run analysis now.`
+              : `Saved prompts #${ids.join(", #")}. First ID selected.`,
+        });
+      } else {
+        setGenNotice({ ok: true, text: "Prompts saved. Refresh the list if needed." });
+      }
+    } catch (e) {
+      setGenNotice({ ok: false, text: e.message || "Generate request failed." });
+    } finally {
+      setGenLoading(false);
+    }
+  };
+
+  const idNum = Math.floor(Number(promptId));
+  const idValid = Number.isFinite(idNum) && idNum >= 1;
+  const isDisabled = loading || !promptId.trim() || !idValid;
+  const selectValue = prompts.some((p) => String(p.id) === promptId.trim()) ? promptId.trim() : "";
 
   return (
     <div style={S.page}>
@@ -675,10 +903,10 @@ function App() {
           <div style={S.infoCard}>
             <p style={S.infoTitle}>How it works</p>
             <ol style={S.stepsList}>
-              <li style={S.stepItem}>Send a stored prompt to the AI model</li>
-              <li style={S.stepItem}>Extract factual claims from the response</li>
-              <li style={S.stepItem}>Compare claims with trusted reference context</li>
-              <li style={S.stepItem}>Flag risky or unsupported claims</li>
+              <li style={S.stepItem}>Pick a saved prompt (or generate new edge-case prompts)</li>
+              <li style={S.stepItem}>Run analysis: the model answers, then claims are extracted</li>
+              <li style={S.stepItem}>Each claim is checked against the prompt&apos;s reference context</li>
+              <li style={S.stepItem}>Review the score, summary, and per-claim verdicts</li>
             </ol>
           </div>
         </div>
@@ -687,15 +915,40 @@ function App() {
         <div style={S.card}>
           <h2 style={S.cardTitle}>Analyze AI Response</h2>
           <p style={S.cardSub}>
-            Enter a prompt ID to detect potential hallucinations in the AI-generated content
+            Choose a prompt from your database, or generate new ones below. Then run analysis to score the model answer against reference context.
           </p>
           <div style={S.inputBlock}>
-            <p style={S.inputLabel}>Prompt ID</p>
-            <p style={S.inputExample}>Use the sample button</p>
+            <p style={S.inputLabel}>Saved prompts</p>
+            <p style={S.inputHelper}>
+              Loaded from the API ({listLoading ? "refreshing…" : `${prompts.length} in list`}).
+            </p>
+            <select
+              style={S.selectControl}
+              value={selectValue}
+              disabled={listLoading}
+              onChange={(e) => {
+                const v = e.target.value;
+                setPromptId(v);
+                setError(null);
+              }}
+              onFocus={(e) => (e.target.style.borderColor = PURPLE)}
+              onBlur={(e) => (e.target.style.borderColor = "transparent")}
+            >
+              <option value="">— Select a prompt —</option>
+              {prompts.map((p) => (
+                <option key={p.id} value={p.id}>
+                  #{p.id} · {p.domain}/{p.category} — {p.prompt_preview}
+                </option>
+              ))}
+            </select>
+
+            <p style={{ ...S.inputLabel, marginTop: "16px" }}>Prompt ID</p>
+            <p style={S.inputExample}>Or type an ID manually</p>
             <div style={S.inputRow}>
               <input
                 type="number"
-                placeholder="Enter Prompt ID (e.g., 5)"
+                min={1}
+                placeholder="e.g. 5"
                 value={promptId}
                 onChange={(e) => { setPromptId(e.target.value); setError(null); }}
                 onKeyDown={(e) => e.key === "Enter" && !isDisabled && runEvaluation()}
@@ -711,30 +964,92 @@ function App() {
                 {loading ? "Analyzing..." : "Analyze"}
               </button>
             </div>
-            
-            {/* Error message */}
+
             {error && (
               <div style={S.errorBox}>
                 {error}
               </div>
             )}
-            
+
             <div style={S.demoRow}>
               <button
                 type="button"
                 style={S.secondaryBtn}
-                onClick={() => setPromptId("5")}
-                disabled={loading}
+                onClick={loadPrompts}
+                disabled={listLoading}
               >
-                Use Sample ID
+                Refresh list
               </button>
             </div>
 
-            {/* Demo tip */}
+            <div style={S.genSection}>
+              <p style={S.genTitle}>Generate edge-case prompts</p>
+              <div style={S.genGrid}>
+                <div style={S.inlineField}>
+                  <p style={S.smallLabel}>Domain</p>
+                  <select
+                    style={S.selectControl}
+                    value={genDomain}
+                    disabled={genLoading}
+                    onChange={(e) => setGenDomain(e.target.value)}
+                  >
+                    {DOMAINS.map((d) => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
+                </div>
+                <div style={S.inlineField}>
+                  <p style={S.smallLabel}>Categories (at least one)</p>
+                  <div style={S.catGrid}>
+                    {CATEGORIES.map((c) => (
+                      <label key={c} style={S.catChip}>
+                        <input
+                          type="checkbox"
+                          checked={genCats.includes(c)}
+                          onChange={() => toggleGenCat(c)}
+                          disabled={genLoading}
+                        />
+                        {c.replace(/_/g, " ")}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                <div style={{ ...S.inlineField, flexDirection: "row", alignItems: "flex-end", gap: "12px" }}>
+                  <div>
+                    <p style={S.smallLabel}>Count</p>
+                    <input
+                      type="number"
+                      min={1}
+                      max={100}
+                      value={genCount}
+                      onChange={(e) => setGenCount(e.target.value)}
+                      disabled={genLoading}
+                      style={S.countInput}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={runGenerate}
+                    disabled={genLoading || genCats.length === 0}
+                    style={{ ...S.secondaryBtn, padding: "10px 16px", fontSize: "13px" }}
+                  >
+                    {genLoading ? "Generating…" : "Generate & save"}
+                  </button>
+                </div>
+              </div>
+              {genNotice && (
+                <p style={genNotice.ok ? S.genOk : { ...S.genOk, color: "#b91c1c" }}>
+                  {genNotice.text}
+                </p>
+              )}
+            </div>
+
             <div style={S.demoTipBox}>
-              <p style={S.demoTipTitle}>Demo Tip</p>
+              <p style={S.demoTipTitle}>Configuration</p>
               <p style={{ margin: 0, lineHeight: "1.7" }}>
-                'Use Sample ID' to try a sample.
+                Point the UI at your API with{" "}
+                <code style={{ fontSize: "12px" }}>VITE_API_BASE_URL</code> (defaults to{" "}
+                <code style={{ fontSize: "12px" }}>http://127.0.0.1:8000</code>).
               </p>
             </div>
           </div>

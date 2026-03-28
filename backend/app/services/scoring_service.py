@@ -167,43 +167,26 @@ def _build_summary(
 # ---------------------------------------------------------------------------
 
 def compute_score(evaluated_claims: list[dict[str, Any]]) -> dict[str, Any]:
-    """Compute simple verdict counts and risk from evaluated claims.
-
-    Risk rules:
-    - any ``contradicted`` claim => ``high``
-    - otherwise, if unsupported claims are common (> 30%) => ``medium``
-    - otherwise => ``low``
-    """
+    """Verdict counts, weighted hallucination score (0–100), risk, and summary text."""
     if not isinstance(evaluated_claims, list):
         raise ValueError("'evaluated_claims' must be a list of dicts.")
 
-    counts = {
-        "supported": 0,
-        "unsupported": 0,
-        "contradicted": 0,
-        "unverifiable": 0,
-    }
-
-    for item in evaluated_claims:
-        verdict = item.get("verdict", "unverifiable")
-        if verdict in counts:
-            counts[verdict] += 1
-        else:
-            counts["unverifiable"] += 1
-
-    total = len(evaluated_claims)
-
-    if counts["contradicted"] > 0:
-        risk = "high"
-    elif total > 0 and (counts["unsupported"] / total) > 0.30:
-        risk = "medium"
-    else:
-        risk = "low"
+    counts = _count_verdicts(evaluated_claims)
+    n_claims = len(evaluated_claims)
+    penalty_rate = _compute_penalty_rate(counts, n_claims)
+    hallucination_score = int(round(penalty_rate * 100))
+    has_contradiction = counts["contradicted"] > 0
+    risk = _risk_level(hallucination_score, has_contradiction)
+    failure = _failure_type(counts, n_claims)
+    summary = _build_summary(hallucination_score, risk, failure, counts, n_claims)
 
     return {
         "supported": counts["supported"],
         "unsupported": counts["unsupported"],
         "contradicted": counts["contradicted"],
         "unverifiable": counts["unverifiable"],
+        "hallucination_score": hallucination_score,
         "risk": risk,
+        "failure_type": failure,
+        "summary": summary,
     }

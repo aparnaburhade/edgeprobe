@@ -1,10 +1,12 @@
 """
 routes.py
 ---------
-FastAPI router for adversarial prompt generation.
+FastAPI router for adversarial prompt generation and prompt listing.
 """
 
-from fastapi import APIRouter, HTTPException, status
+from datetime import datetime
+
+from fastapi import APIRouter, HTTPException, Query, status
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import text
 from typing import Any
@@ -74,9 +76,66 @@ class GenerateResponse(BaseModel):
     prompts: list[dict[str, Any]]
 
 
+class PromptSummary(BaseModel):
+    id: int
+    domain: str
+    category: str
+    prompt_preview: str
+    created_at: datetime | None = None
+
+
+class PromptListResponse(BaseModel):
+    prompts: list[PromptSummary]
+
+
+def _preview(text: str, max_len: int = 120) -> str:
+    t = (text or "").strip().replace("\n", " ")
+    if len(t) <= max_len:
+        return t
+    return t[: max_len - 1].rstrip() + "…"
+
+
 # ---------------------------------------------------------------------------
-# Endpoint
+# Endpoints
 # ---------------------------------------------------------------------------
+
+
+@router.get(
+    "/",
+    response_model=PromptListResponse,
+    summary="List stored prompts (newest first)",
+)
+def list_prompts(
+    limit: int = Query(100, ge=1, le=500, description="Max rows to return."),
+) -> PromptListResponse:
+    db = SessionLocal()
+    try:
+        rows = db.execute(
+            text(
+                """
+                SELECT id, domain, category, prompt_text, created_at
+                FROM prompts
+                ORDER BY id DESC
+                LIMIT :limit
+                """
+            ),
+            {"limit": limit},
+        ).fetchall()
+    finally:
+        db.close()
+
+    summaries = [
+        PromptSummary(
+            id=r[0],
+            domain=r[1],
+            category=r[2],
+            prompt_preview=_preview(r[3] or ""),
+            created_at=r[4],
+        )
+        for r in rows
+    ]
+    return PromptListResponse(prompts=summaries)
+
 
 @router.post(
     "/generate",
@@ -100,11 +159,12 @@ def generate_prompts(request: GenerateRequest) -> GenerateResponse:
         db = SessionLocal()
         try:
             for prompt in prompts:
-                db.execute(
+                row = db.execute(
                     text(
                         """
                         INSERT INTO prompts (domain, category, prompt_text, reference_context)
                         VALUES (:domain, :category, :prompt_text, :reference_context)
+                        RETURNING id
                         """
                     ),
                     {
@@ -113,7 +173,8 @@ def generate_prompts(request: GenerateRequest) -> GenerateResponse:
                         "prompt_text": prompt["prompt_text"],
                         "reference_context": prompt["reference_context"],
                     },
-                )
+                ).fetchone()
+                prompt["id"] = int(row[0])
             db.commit()
         finally:
             db.close()
