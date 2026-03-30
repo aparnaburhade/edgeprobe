@@ -1293,7 +1293,7 @@ function App() {
       </main>
 
       <footer style={S.footer}>
-        <p style={S.footerText}>Edge Probe — model evaluation, refined</p>
+        <p style={S.footerText}>Edge Probe — claim-level AI reliability checks</p>
       </footer>
     </div>
   );
