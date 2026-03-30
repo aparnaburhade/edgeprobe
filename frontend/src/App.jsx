@@ -795,7 +795,7 @@ function ResponseSection({ text }) {
 }
 
 // -- ScoreSection -----------------------------------------------
-function ScoreSection({ score }) {
+function ScoreSection({ score, isPhone }) {
   if (!score) return null;
   const risk = (score.risk ?? "low").toLowerCase();
   const rp   = RISK_PILL[risk] ?? RISK_PILL.low;
@@ -809,7 +809,7 @@ function ScoreSection({ score }) {
   return (
     <div style={{ fontFamily: FONT_UI }}>
       <p style={S.scoreSectionLabel}>Evaluation Score</p>
-      <div style={S.sectionCard}>
+      <div style={{ ...S.sectionCard, ...(isPhone ? { padding: "14px 14px" } : {}) }}>
         {typeof hs === "number" && (
           <div style={S.scoreMeterRow}>
             <span style={S.scoreMeterValue}>{hs}</span>
@@ -828,7 +828,13 @@ function ScoreSection({ score }) {
         {score.failure_type && score.failure_type !== "none" && (
           <p style={S.failureType}>Failure mode: {String(score.failure_type).replace(/_/g, " ")}</p>
         )}
-        <div style={{ ...S.statsGrid, marginTop: score.summary ? "8px" : 0 }}>
+        <div
+          style={{
+            ...S.statsGrid,
+            ...(isPhone ? { gridTemplateColumns: "1fr" } : {}),
+            marginTop: score.summary ? "8px" : 0,
+          }}
+        >
           {stats.map(({ num, label }) => (
             <div key={label} style={S.statBox}>
               <span style={S.statNum}>{num}</span>
@@ -842,13 +848,13 @@ function ScoreSection({ score }) {
 }
 
 // -- ClaimsSection ----------------------------------------------
-function ClaimCard({ claim }) {
+function ClaimCard({ claim, isPhone }) {
   const pct = Math.round((claim.confidence ?? 0) * 100);
   const key = (claim.verdict ?? "unverifiable").toLowerCase();
   const vs  = VERDICT_STYLE[key] ?? VERDICT_STYLE.unverifiable;
   return (
     <div style={S.claimCard}>
-      <div style={S.claimTopRow}>
+      <div style={{ ...S.claimTopRow, ...(isPhone ? { flexDirection: "column", gap: "8px" } : {}) }}>
         <p style={S.claimText}>{claim.claim_text}</p>
         <VerdictBadge verdict={claim.verdict} />
       </div>
@@ -874,7 +880,7 @@ function ClaimCard({ claim }) {
   );
 }
 
-function ClaimsSection({ claims }) {
+function ClaimsSection({ claims, isPhone }) {
   if (!claims?.length) return null;
   return (
     <div>
@@ -884,10 +890,10 @@ function ClaimsSection({ claims }) {
           {" "}— {claims.length} claim{claims.length !== 1 ? "s" : ""}
         </span>
       </p>
-      <div style={S.sectionCard}>
+      <div style={{ ...S.sectionCard, ...(isPhone ? { padding: "14px 14px" } : {}) }}>
         <div style={S.claimsList}>
           {claims.map((claim, i) => (
-            <ClaimCard key={`${claim.claim_text ?? ""}-${i}`} claim={claim} />
+            <ClaimCard key={`${claim.claim_text ?? ""}-${i}`} claim={claim} isPhone={isPhone} />
           ))}
         </div>
       </div>
@@ -909,6 +915,7 @@ function App() {
   const [genCount, setGenCount]   = useState(3);
   const [genLoading, setGenLoading] = useState(false);
   const [genNotice, setGenNotice]   = useState(null);
+  const [isPhone, setIsPhone] = useState(() => window.innerWidth <= 700);
 
   const loadPrompts = useCallback(async () => {
     setListLoading(true);
@@ -928,6 +935,12 @@ function App() {
   useEffect(() => {
     loadPrompts();
   }, [loadPrompts]);
+
+  useEffect(() => {
+    const onResize = () => setIsPhone(window.innerWidth <= 700);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   const sanitizeError = (raw) => {
     if (!raw) return "Something went wrong. Please try again.";
@@ -1046,12 +1059,12 @@ function App() {
 
   return (
     <div style={S.page}>
-      <header style={S.nav}>
+      <header style={{ ...S.nav, ...(isPhone ? { padding: "12px 16px" } : {}) }}>
         <div style={S.navBrand}>
           <p style={S.navMark}>Edge Probe</p>
           <div style={S.navRule} aria-hidden />
         </div>
-        <p style={S.navAside}>
+        <p style={{ ...S.navAside, ...(isPhone ? { display: "none" } : {}) }}>
           Claim-level
           <br />
           evaluation
@@ -1059,7 +1072,7 @@ function App() {
       </header>
 
       <main style={S.main}>
-        <section style={S.hero}>
+        <section style={{ ...S.hero, ...(isPhone ? { padding: "20px 16px 16px" } : {}) }}>
           <p style={S.heroEyebrow}>Hallucination intelligence</p>
           <h1 style={S.heroTitle}>
             Clarity for every{" "}
@@ -1073,7 +1086,7 @@ function App() {
           <div style={S.heroRule} aria-hidden />
         </section>
 
-        <section style={S.pillars}>
+        <section style={{ ...S.pillars, ...(isPhone ? { padding: "0 16px 18px" } : {}) }}>
           <div style={S.pillarsGrid}>
             <article style={S.pillar}>
               <p style={S.pillarNum}>01</p>
@@ -1102,7 +1115,7 @@ function App() {
           </div>
         </section>
 
-        <section style={S.studio}>
+        <section style={{ ...S.studio, ...(isPhone ? { padding: "18px 16px 24px" } : {}) }}>
           <p style={S.studioEyebrow}>The studio</p>
           <h2 style={S.studioHeading}>Run an analysis</h2>
           <p style={S.studioIntro}>
@@ -1110,9 +1123,9 @@ function App() {
             edge-case prompts first—each has its own panel below.
           </p>
 
-          <div style={S.card}>
+          <div style={{ ...S.card, ...(isPhone ? { padding: "12px" } : {}) }}>
           <div style={S.workflowStack}>
-            <div style={{ ...S.workflowCard, ...S.workflowCardRun }}>
+            <div style={{ ...S.workflowCard, ...S.workflowCardRun, ...(isPhone ? { padding: "12px 12px 14px" } : {}) }}>
               <p style={{ ...S.workflowCardKicker, color: BRICK }}>Run the model</p>
               <h3 style={S.workflowCardTitle}>Use a saved prompt</h3>
               <p style={S.workflowCardLead}>
@@ -1143,7 +1156,7 @@ function App() {
 
             <p style={{ ...S.inputLabel, marginTop: "10px" }}>Prompt ID</p>
             <p style={S.inputExample}>Or type an ID manually</p>
-            <div style={S.inputRow}>
+            <div style={{ ...S.inputRow, ...(isPhone ? { flexDirection: "column", gap: "10px" } : {}) }}>
               <input
                 type="number"
                 min={1}
@@ -1151,14 +1164,18 @@ function App() {
                 value={promptId}
                 onChange={(e) => { setPromptId(e.target.value); setError(null); }}
                 onKeyDown={(e) => e.key === "Enter" && !isDisabled && runEvaluation()}
-                style={S.input}
+                style={{ ...S.input, ...(isPhone ? { width: "100%", flex: "1 1 auto" } : {}) }}
                 onFocus={(e) => (e.target.style.borderColor = ACCENT_FOCUS)}
                 onBlur={(e)  => (e.target.style.borderColor = "transparent")}
               />
               <button
                 onClick={runEvaluation}
                 disabled={isDisabled}
-                style={{ ...S.btnBase, ...(isDisabled ? S.btnDisabled : {}) }}
+                style={{
+                  ...S.btnBase,
+                  ...(isPhone ? { width: "100%" } : {}),
+                  ...(isDisabled ? S.btnDisabled : {}),
+                }}
               >
                 {loading ? "Analyzing..." : "Analyze"}
               </button>
@@ -1173,7 +1190,7 @@ function App() {
             <div style={S.demoRow}>
               <button
                 type="button"
-                style={S.secondaryBtn}
+                style={{ ...S.secondaryBtn, ...(isPhone ? { width: "100%" } : {}) }}
                 onClick={loadPrompts}
                 disabled={listLoading}
               >
@@ -1183,7 +1200,7 @@ function App() {
               </div>
             </div>
 
-            <div style={{ ...S.workflowCard, ...S.workflowCardCreate }}>
+            <div style={{ ...S.workflowCard, ...S.workflowCardCreate, ...(isPhone ? { padding: "12px 12px 14px" } : {}) }}>
               <p style={{ ...S.workflowCardKicker, color: "#3d524e" }}>Grow the library</p>
               <h3 style={S.workflowCardTitle}>Generate new prompts</h3>
               <p style={S.workflowCardLead}>
@@ -1222,7 +1239,14 @@ function App() {
                     ))}
                   </div>
                 </div>
-                <div style={{ ...S.inlineField, flexDirection: "row", alignItems: "flex-end", gap: "12px" }}>
+                <div
+                  style={{
+                    ...S.inlineField,
+                    flexDirection: isPhone ? "column" : "row",
+                    alignItems: isPhone ? "stretch" : "flex-end",
+                    gap: "10px",
+                  }}
+                >
                   <div>
                     <p style={S.smallLabel}>Count</p>
                     <input
@@ -1239,7 +1263,7 @@ function App() {
                     type="button"
                     onClick={runGenerate}
                     disabled={genLoading || genCats.length === 0}
-                    style={{ ...S.secondaryBtn, padding: "14px 22px" }}
+                    style={{ ...S.secondaryBtn, padding: "14px 22px", ...(isPhone ? { width: "100%" } : {}) }}
                   >
                     {genLoading ? "Generating…" : "Generate & save"}
                   </button>
@@ -1256,15 +1280,15 @@ function App() {
           </div>
         </section>
 
-        <section style={S.resultsShell}>
+        <section style={{ ...S.resultsShell, ...(isPhone ? { padding: "14px 16px 26px" } : {}) }}>
           {result ? (
             <div style={S.resultWrap}>
               <p style={S.studioEyebrow}>Results</p>
               <h2 style={{ ...S.studioHeading, marginBottom: "4px" }}>Your last run</h2>
               <PromptSection   promptText={result.prompt_text} />
               <ResponseSection text={result.response_text} />
-              <ScoreSection    score={result.score} />
-              <ClaimsSection   claims={result.claims} />
+              <ScoreSection    score={result.score} isPhone={isPhone} />
+              <ClaimsSection   claims={result.claims} isPhone={isPhone} />
             </div>
           ) : (
             <div style={S.empty}>
