@@ -14,244 +14,357 @@ const CATEGORIES = [
   "multi_hop",
 ];
 
-// -- Design tokens ----------------------------------------------
-const PURPLE      = "#7c3aed";
-const GRAY_BG     = "#f4f5f7";
-const GRAY_BORDER = "#e8e8ed";
-const GRAY_INPUT  = "#f3f4f6";
-const TEXT_DARK   = "#111827";
-const TEXT_MID    = "#374151";
-const TEXT_MUTED  = "#6b7280";
-const TEXT_FAINT  = "#9ca3af";
-const WHITE       = "#ffffff";
+// -- Design tokens (Coolors: 080f0f · a4bab7 · f2f5cc · f1ece4 · a52422)
+// https://coolors.co/080f0f-a4bab7-f2f5cc-f1ece4-a52422
+const INK = "#080f0f";
+const SAGE = "#a4bab7";
+const LIME = "#f2f5cc";
+const PAPER = "#f1ece4";
+const BRICK = "#a52422";
+
+const ACCENT = BRICK;
+const ACCENT_FOCUS = "#6b8f89";
+const GRAY_BG = PAPER;
+const GRAY_BORDER = SAGE;
+const GRAY_INPUT = "#e8e4db";
+const TEXT_DARK = INK;
+const TEXT_MID = "#2c3635";
+const TEXT_MUTED = "#4a5654";
+const TEXT_FAINT = "#5f6d6a";
+const WHITE = "#ffffff";
+const CREAM = "#faf9f7";
+const FONT_DISPLAY = "'Cormorant Garamond', Georgia, serif";
+const FONT_UI = "'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif";
 
 // -- Style map --------------------------------------------------
 const S = {
   page: {
     minHeight: "100vh",
-    backgroundColor: GRAY_BG,
-    fontFamily: "'Plus Jakarta Sans', 'Segoe UI', system-ui, -apple-system, sans-serif",
+    background: `linear-gradient(168deg, #faf8f5 0%, ${PAPER} 42%, #e8e2d8 100%)`,
+    fontFamily: "inherit",
     textAlign: "left",
+    fontSize: "17px",
+    color: TEXT_MID,
   },
 
-  // Header
-  header: {
+  nav: {
+    position: "sticky",
+    top: 0,
+    zIndex: 50,
     display: "flex",
     alignItems: "center",
-    gap: "14px",
-    padding: "20px 32px",
-    backgroundColor: WHITE,
-    borderBottom: '1px solid ' + GRAY_BORDER,
+    justifyContent: "space-between",
+    padding: "16px clamp(20px, 4vw, 40px)",
+    backgroundColor: "rgba(255,255,255,0.72)",
+    backdropFilter: "saturate(140%) blur(16px)",
+    WebkitBackdropFilter: "saturate(140%) blur(16px)",
+    borderBottom: "1px solid rgba(164,186,183,0.4)",
   },
-  headerIcon: {
-    width: "38px",
-    height: "38px",
-    backgroundColor: PURPLE,
-    borderRadius: "10px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    flexShrink: 0,
-  },
-  headerTitleBlock: { display: "flex", flexDirection: "column", gap: "2px" },
-  headerTitle: {
-    fontSize: "32px",
-    fontWeight: "800",
+  navBrand: { display: "flex", flexDirection: "column", gap: "6px" },
+  navMark: {
+    fontFamily: FONT_DISPLAY,
+    fontSize: "clamp(24px, 3.2vw, 32px)",
+    fontWeight: 700,
     color: TEXT_DARK,
+    letterSpacing: "0.02em",
     margin: 0,
-    lineHeight: "1.1",
-    letterSpacing: "-0.8px",
+    lineHeight: 1,
   },
-  headerSub: {
-    fontSize: "14px",
-    color: TEXT_MUTED,
-    margin: "0",
-    letterSpacing: "0.1px",
-    fontWeight: "500",
+  navRule: {
+    width: "40px",
+    height: "2px",
+    backgroundColor: BRICK,
+  },
+  navAside: {
+    fontSize: "11px",
+    fontWeight: 600,
+    letterSpacing: "0.22em",
+    textTransform: "uppercase",
+    color: TEXT_FAINT,
+    textAlign: "right",
+    lineHeight: 1.6,
   },
 
-  // Main layout
   main: {
     display: "flex",
     flexDirection: "column",
-    alignItems: "center",
-    padding: "64px 24px 84px",
-    gap: "24px",
+    alignItems: "stretch",
+    padding: 0,
+    gap: 0,
   },
 
-  // Intro / guide
-  introWrap: {
+  hero: {
+    padding: "clamp(28px, 6vw, 56px) clamp(20px, 4vw, 40px) clamp(24px, 4vw, 44px)",
+    maxWidth: "940px",
+    margin: "0 auto",
     width: "100%",
-    maxWidth: "620px",
-    display: "flex",
-    flexDirection: "column",
-    gap: "18px",
+    boxSizing: "border-box",
   },
-  infoCard: {
-    backgroundColor: WHITE,
-    borderRadius: "14px",
-    boxShadow: "0 4px 20px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)",
-    padding: "22px 24px",
+  heroEyebrow: {
+    fontSize: "11px",
+    fontWeight: 600,
+    letterSpacing: "0.28em",
+    textTransform: "uppercase",
+    color: TEXT_FAINT,
+    margin: "0 0 14px",
   },
-  infoTitle: {
-    margin: "0 0 10px",
-    fontSize: "17px",
-    fontWeight: "650",
+  heroTitle: {
+    fontFamily: FONT_DISPLAY,
+    fontSize: "clamp(44px, 8.5vw, 88px)",
+    fontWeight: 700,
+    lineHeight: "1.02",
     color: TEXT_DARK,
-    letterSpacing: "-0.2px",
+    margin: "0 0 16px",
+    letterSpacing: "-0.035em",
+    maxWidth: "14ch",
   },
-  infoText: {
-    margin: 0,
-    fontSize: "14px",
+  heroLead: {
+    fontSize: "clamp(17px, 2.1vw, 21px)",
+    lineHeight: 1.75,
     color: TEXT_MUTED,
-    lineHeight: "1.8",
-    fontWeight: "450",
+    fontWeight: 400,
+    maxWidth: "36em",
+    margin: "0 0 20px",
   },
-  stepsList: {
+  heroRule: {
+    width: "56px",
+    height: "1px",
+    background: "linear-gradient(90deg, " + SAGE + ", transparent)",
     margin: 0,
-    paddingLeft: "18px",
-    color: TEXT_MID,
-    fontSize: "14px",
-    lineHeight: "1.9",
-  },
-  stepItem: {
-    marginBottom: "4px",
   },
 
-  // Analyze card
-  card: {
-    backgroundColor: WHITE,
-    borderRadius: "16px",
-    boxShadow: "0 4px 24px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04)",
-    padding: "36px 40px",
+  pillars: {
+    padding: "0 clamp(20px, 4vw, 40px) clamp(28px, 5vw, 48px)",
+    maxWidth: "1080px",
+    margin: "0 auto",
     width: "100%",
-    maxWidth: "620px",
+    boxSizing: "border-box",
   },
-  cardTitle: {
-    fontSize: "24px",
-    fontWeight: "700",
+  pillarsGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+    gap: "clamp(12px, 2vw, 20px)",
+  },
+  pillar: {
+    padding: "22px 22px 26px",
+    borderTop: "1px solid rgba(164,186,183,0.85)",
+    backgroundColor: "rgba(255,255,255,0.5)",
+  },
+  pillarNum: {
+    fontFamily: FONT_DISPLAY,
+    fontSize: "48px",
+    fontWeight: 700,
+    color: "rgba(8,15,15,0.14)",
+    margin: "0 0 10px",
+    lineHeight: 1,
+  },
+  pillarTitle: {
+    fontFamily: FONT_DISPLAY,
+    fontSize: "15px",
+    fontWeight: 700,
+    letterSpacing: "0.14em",
+    textTransform: "uppercase",
     color: TEXT_DARK,
     margin: "0 0 8px",
-    letterSpacing: "-0.5px",
   },
-  cardSub: {
-    fontSize: "14px",
+  pillarText: {
+    fontSize: "16px",
+    lineHeight: 1.8,
     color: TEXT_MUTED,
-    margin: "0 0 26px",
-    lineHeight: "1.75",
-    fontWeight: "450",
+    margin: 0,
+    fontWeight: 400,
+  },
+
+  studio: {
+    padding: "clamp(28px, 5vw, 48px) clamp(20px, 4vw, 40px) clamp(36px, 6vw, 64px)",
+    maxWidth: "680px",
+    margin: "0 auto",
+    width: "100%",
+    boxSizing: "border-box",
+    borderTop: "1px solid rgba(164,186,183,0.45)",
+  },
+  studioEyebrow: {
+    fontSize: "11px",
+    fontWeight: 600,
+    letterSpacing: "0.28em",
+    textTransform: "uppercase",
+    color: TEXT_FAINT,
+    margin: "0 0 10px",
+  },
+  studioHeading: {
+    fontFamily: FONT_DISPLAY,
+    fontSize: "clamp(36px, 5.8vw, 52px)",
+    fontWeight: 700,
+    color: TEXT_DARK,
+    margin: "0 0 10px",
+    lineHeight: 1.1,
+    letterSpacing: "-0.025em",
+  },
+  studioIntro: {
+    fontSize: "17px",
+    lineHeight: 1.75,
+    color: TEXT_MUTED,
+    margin: "0 0 22px",
+    fontWeight: 400,
+    maxWidth: "38em",
+  },
+
+  card: {
+    backgroundColor: "rgba(255,255,255,0.92)",
+    backdropFilter: "blur(12px)",
+    WebkitBackdropFilter: "blur(12px)",
+    border: "1px solid rgba(164,186,183,0.55)",
+    borderRadius: "2px",
+    boxShadow: "0 40px 80px -48px rgba(8,15,15,0.18)",
+    padding: "clamp(18px, 3vw, 26px)",
+    width: "100%",
+    maxWidth: "100%",
+  },
+
+  workflowStack: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "14px",
+  },
+  workflowCard: {
+    borderRadius: "2px",
+    padding: "18px 18px 20px",
+    border: "1px solid rgba(164,186,183,0.45)",
+    backgroundColor: "rgba(255,255,255,0.75)",
+  },
+  workflowCardRun: {
+    borderLeft: "4px solid " + BRICK,
+    backgroundColor: "rgba(255,255,255,0.88)",
+  },
+  workflowCardCreate: {
+    borderLeft: "4px solid " + SAGE,
+    backgroundColor: "rgba(242,245,204,0.28)",
+  },
+  workflowCardKicker: {
+    fontSize: "10px",
+    fontWeight: 700,
+    letterSpacing: "0.22em",
+    textTransform: "uppercase",
+    margin: "0 0 6px",
+  },
+  workflowCardTitle: {
+    fontFamily: FONT_DISPLAY,
+    fontSize: "clamp(26px, 4.2vw, 34px)",
+    fontWeight: 700,
+    color: TEXT_DARK,
+    margin: "0 0 6px",
+    lineHeight: 1.15,
+    letterSpacing: "-0.02em",
+  },
+  workflowCardLead: {
+    fontSize: "15px",
+    lineHeight: 1.7,
+    color: TEXT_MUTED,
+    margin: "0 0 14px",
+    fontWeight: 450,
+    maxWidth: "36em",
   },
 
   // Input row
-  inputRow: { display: "flex", gap: "10px" },
+  inputRow: { display: "flex", gap: "14px", flexWrap: "wrap", alignItems: "stretch" },
   inputBlock: {
     display: "flex",
     flexDirection: "column",
     gap: "8px",
-    marginTop: "2px",
+    marginTop: 0,
   },
   inputLabel: {
-    fontSize: "13px",
+    fontSize: "16px",
     color: TEXT_MID,
-    fontWeight: "650",
+    fontWeight: "800",
     margin: 0,
+    letterSpacing: "0.02em",
   },
   inputHelper: {
-    fontSize: "12.5px",
+    fontSize: "15px",
     color: TEXT_FAINT,
     margin: 0,
     lineHeight: "1.65",
   },
   inputExample: {
-    fontSize: "12.5px",
+    fontSize: "15px",
     color: TEXT_FAINT,
-    margin: "2px 0 0",
+    margin: "4px 0 0",
     lineHeight: "1.65",
   },
   demoRow: {
-    marginTop: "10px",
+    marginTop: "8px",
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    gap: "10px",
+    gap: "12px",
     flexWrap: "wrap",
   },
   demoHint: {
-    fontSize: "12.5px",
+    fontSize: "15px",
     color: TEXT_FAINT,
     margin: 0,
     lineHeight: "1.65",
   },
   secondaryBtn: {
-    border: '1px solid ' + GRAY_BORDER,
-    backgroundColor: WHITE,
+    border: "1px solid rgba(164,186,183,0.9)",
+    backgroundColor: "rgba(255,255,255,0.6)",
     color: TEXT_MID,
-    borderRadius: "9px",
-    fontSize: "12px",
+    borderRadius: "2px",
+    fontSize: "13px",
     fontWeight: "600",
-    padding: "8px 12px",
+    letterSpacing: "0.12em",
+    textTransform: "uppercase",
+    padding: "14px 22px",
+    minHeight: "48px",
     cursor: "pointer",
     whiteSpace: "nowrap",
+    transition: "background-color 0.2s, border-color 0.2s",
   },
   input: {
-    flex: 1,
-    padding: "11px 14px",
-    backgroundColor: GRAY_INPUT,
-    border: "1.5px solid transparent",
-    borderRadius: "10px",
-    fontSize: "14px",
+    flex: "1 1 200px",
+    padding: "16px 18px",
+    backgroundColor: CREAM,
+    border: "1px solid transparent",
+    borderRadius: "2px",
+    fontSize: "17px",
     color: TEXT_DARK,
     outline: "none",
-    transition: "border-color 0.15s",
+    transition: "border-color 0.2s, background-color 0.2s",
     fontFamily: "inherit",
+    minHeight: "52px",
+    boxSizing: "border-box",
   },
   btnBase: {
-    padding: "11px 22px",
-    backgroundColor: PURPLE,
+    padding: "17px 32px",
+    backgroundColor: ACCENT,
     color: WHITE,
     border: "none",
-    borderRadius: "10px",
-    fontSize: "14px",
+    borderRadius: "2px",
+    fontSize: "13px",
     fontWeight: "600",
+    letterSpacing: "0.18em",
+    textTransform: "uppercase",
     cursor: "pointer",
     whiteSpace: "nowrap",
-    transition: "background-color 0.15s, opacity 0.15s",
+    transition: "background-color 0.2s, opacity 0.2s",
     fontFamily: "inherit",
-    letterSpacing: "0.1px",
+    minHeight: "52px",
+    boxSizing: "border-box",
   },
   btnDisabled: { opacity: 0.55, cursor: "not-allowed" },
 
   // Error box
   errorBox: {
-    backgroundColor: "#fef2f2",
-    border: "1px solid #fca5a5",
-    borderRadius: "10px",
-    padding: "12px 16px",
+    backgroundColor: "rgba(165,36,34,0.06)",
+    border: "1px solid rgba(165,36,34,0.35)",
+    borderRadius: "2px",
+    padding: "18px 22px",
     marginTop: "10px",
-    fontSize: "13px",
-    color: "#b91c1c",
+    fontSize: "15px",
+    color: INK,
     lineHeight: "1.65",
     fontWeight: "500",
-  },
-
-  // Demo tip box
-  demoTipBox: {
-    backgroundColor: "#f0f9ff",
-    border: "1px solid #bfdbfe",
-    borderRadius: "10px",
-    padding: "14px 16px",
-    marginTop: "14px",
-    fontSize: "12.5px",
-    color: "#0369a1",
-    lineHeight: "1.7",
-  },
-  demoTipTitle: {
-    fontSize: "12px",
-    fontWeight: "700",
-    color: "#0369a1",
-    textTransform: "uppercase",
-    letterSpacing: "0.5px",
-    margin: "0 0 6px",
   },
 
   // Empty state
@@ -259,40 +372,52 @@ const S = {
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
-    marginTop: "60px",
+    marginTop: 0,
     textAlign: "center",
+    padding: "clamp(20px, 4vw, 36px) 20px",
   },
   emptyIconBox: {
-    width: "60px",
-    height: "60px",
-    backgroundColor: WHITE,
-    border: '1px solid ' + GRAY_BORDER,
-    borderRadius: "14px",
+    width: "72px",
+    height: "72px",
+    backgroundColor: "rgba(255,255,255,0.5)",
+    border: "1px solid rgba(164,186,183,0.5)",
+    borderRadius: "2px",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: "18px",
-    boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+    marginBottom: "14px",
   },
   emptyHeading: {
-    fontSize: "18px",
-    fontWeight: "650",
-    color: TEXT_MID,
-    margin: "0 0 8px",
+    fontFamily: FONT_DISPLAY,
+    fontSize: "clamp(28px, 4.2vw, 38px)",
+    fontWeight: 700,
+    color: TEXT_DARK,
+    margin: "0 0 10px",
+    lineHeight: 1.15,
   },
   emptySub: {
-    fontSize: "14px",
-    color: TEXT_FAINT,
+    fontSize: "17px",
+    color: TEXT_MUTED,
     margin: 0,
-    maxWidth: "380px",
-    lineHeight: "1.75",
+    maxWidth: "28em",
+    lineHeight: 1.75,
+    fontWeight: 400,
+  },
+
+  resultsShell: {
+    padding: "clamp(20px, 4vw, 36px) clamp(20px, 4vw, 40px) clamp(32px, 5vw, 56px)",
+    maxWidth: "800px",
+    margin: "0 auto",
+    width: "100%",
+    boxSizing: "border-box",
+    borderTop: "1px solid rgba(164,186,183,0.45)",
   },
 
   // -- Result layout
   resultWrap: {
-    marginTop: "12px",
+    marginTop: 0,
     width: "100%",
-    maxWidth: "660px",
+    maxWidth: "100%",
     display: "flex",
     flexDirection: "column",
     gap: "20px",
@@ -301,134 +426,163 @@ const S = {
   // Shared section building blocks
   sectionLabel: {
     fontSize: "11px",
-    fontWeight: "650",
-    color: TEXT_MUTED,
+    fontWeight: 700,
+    color: TEXT_FAINT,
     textTransform: "uppercase",
-    letterSpacing: "0.9px",
-    margin: "0 0 12px",
+    letterSpacing: "0.24em",
+    margin: "0 0 8px",
   },
   sectionCard: {
-    backgroundColor: WHITE,
-    borderRadius: "14px",
-    boxShadow: "0 4px 20px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)",
-    padding: "24px 28px",
+    backgroundColor: "rgba(255,255,255,0.88)",
+    border: "1px solid rgba(164,186,183,0.45)",
+    borderRadius: "2px",
+    boxShadow: "0 24px 48px -32px rgba(8,15,15,0.1)",
+    padding: "18px 20px",
   },
 
   // Response
   responseText: {
-    fontSize: "15px",
+    fontSize: "18px",
     color: TEXT_MID,
-    lineHeight: "1.9",
+    lineHeight: "1.85",
     margin: 0,
     whiteSpace: "pre-wrap",
     wordBreak: "break-word",
   },
   placeholderText: {
-    fontSize: "13px",
+    fontSize: "17px",
     color: TEXT_FAINT,
     margin: 0,
     lineHeight: "1.7",
     fontStyle: "italic",
   },
 
-  // Score
+  // Score (sans-serif for numerals & evaluation copy — easier to scan than display serif)
   riskRow: {
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: "18px",
-    paddingBottom: "16px",
-    borderBottom: '1px solid ' + GRAY_BORDER,
+    flexWrap: "wrap",
+    gap: "10px",
+    marginBottom: "12px",
+    paddingBottom: "12px",
+    borderBottom: "1px solid rgba(164,186,183,0.45)",
+    fontFamily: FONT_UI,
   },
-  riskLabel: { fontSize: "13px", fontWeight: "600", color: TEXT_MUTED },
+  riskLabel: {
+    fontSize: "16px",
+    fontWeight: "600",
+    color: TEXT_MUTED,
+    letterSpacing: "0.04em",
+    fontFamily: FONT_UI,
+  },
   riskPill: {
-    fontSize: "13px",
-    fontWeight: "700",
-    padding: "6px 18px",
-    borderRadius: "20px",
-    letterSpacing: "0.5px",
+    fontSize: "11px",
+    fontWeight: "600",
+    padding: "8px 16px",
+    borderRadius: "2px",
+    letterSpacing: "0.16em",
+    textTransform: "uppercase",
+    fontFamily: FONT_UI,
   },
   statsGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(4, 1fr)",
+    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
     gap: "10px",
+    fontFamily: FONT_UI,
   },
   statBox: {
-    backgroundColor: GRAY_BG,
-    borderRadius: "10px",
-    padding: "14px 10px",
+    backgroundColor: "rgba(242,245,204,0.45)",
+    borderRadius: "2px",
+    padding: "14px 12px",
     textAlign: "center",
+    border: "1px solid rgba(164,186,183,0.4)",
   },
   statNum: {
-    fontSize: "24px",
-    fontWeight: "700",
+    fontFamily: FONT_UI,
+    fontSize: "32px",
+    fontWeight: "800",
     color: TEXT_DARK,
     lineHeight: "1.1",
-    marginBottom: "5px",
+    marginBottom: "4px",
     display: "block",
+    fontVariantNumeric: "tabular-nums",
   },
   statLabel: {
-    fontSize: "10.5px",
+    fontFamily: FONT_UI,
+    fontSize: "13px",
     color: TEXT_MUTED,
-    fontWeight: "500",
+    fontWeight: "600",
     textTransform: "uppercase",
-    letterSpacing: "0.4px",
+    letterSpacing: "0.06em",
   },
   scoreMeterRow: {
     display: "flex",
     alignItems: "baseline",
     gap: "12px",
-    marginBottom: "14px",
+    flexWrap: "wrap",
+    marginBottom: "12px",
+    fontFamily: FONT_UI,
   },
   scoreMeterValue: {
-    fontSize: "36px",
-    fontWeight: "800",
+    fontFamily: FONT_UI,
+    fontSize: "clamp(48px, 8vw, 64px)",
+    fontWeight: 800,
     color: TEXT_DARK,
-    letterSpacing: "-1px",
+    letterSpacing: "-0.04em",
     lineHeight: 1,
+    fontVariantNumeric: "tabular-nums",
   },
   scoreMeterHint: {
-    fontSize: "12px",
+    fontFamily: FONT_UI,
+    fontSize: "16px",
     color: TEXT_FAINT,
     fontWeight: "500",
-    flex: 1,
+    flex: "1 1 220px",
+    lineHeight: 1.55,
   },
   summaryPara: {
-    margin: "0 0 12px",
-    fontSize: "13.5px",
+    fontFamily: FONT_UI,
+    margin: "0 0 10px",
+    fontSize: "17px",
     color: TEXT_MID,
     lineHeight: 1.75,
     fontWeight: "450",
   },
   failureType: {
-    fontSize: "11px",
+    fontFamily: FONT_UI,
+    fontSize: "14px",
     color: TEXT_FAINT,
-    fontWeight: "600",
+    fontWeight: "700",
     textTransform: "uppercase",
-    letterSpacing: "0.4px",
+    letterSpacing: "0.08em",
     margin: 0,
+  },
+  scoreSectionLabel: {
+    fontFamily: FONT_UI,
+    fontSize: "11px",
+    fontWeight: 700,
+    color: TEXT_FAINT,
+    textTransform: "uppercase",
+    letterSpacing: "0.24em",
+    margin: "0 0 8px",
   },
   selectControl: {
     width: "100%",
-    padding: "10px 12px",
-    backgroundColor: GRAY_INPUT,
-    border: "1.5px solid transparent",
-    borderRadius: "10px",
-    fontSize: "13px",
+    padding: "16px 18px",
+    backgroundColor: CREAM,
+    border: "1px solid transparent",
+    borderRadius: "2px",
+    fontSize: "17px",
     color: TEXT_DARK,
     fontFamily: "inherit",
     cursor: "pointer",
+    minHeight: "52px",
+    boxSizing: "border-box",
   },
   genSection: {
-    marginTop: "22px",
-    paddingTop: "22px",
-    borderTop: "1px solid " + GRAY_BORDER,
-  },
-  genTitle: {
-    fontSize: "14px",
-    fontWeight: "650",
-    color: TEXT_DARK,
-    margin: "0 0 12px",
+    marginTop: 0,
+    paddingTop: 0,
   },
   genGrid: {
     display: "grid",
@@ -442,92 +596,97 @@ const S = {
   catChip: {
     display: "inline-flex",
     alignItems: "center",
-    gap: "6px",
-    fontSize: "12px",
+    gap: "10px",
+    fontSize: "16px",
     color: TEXT_MID,
     fontWeight: "500",
     cursor: "pointer",
     userSelect: "none",
+    padding: "6px 0",
   },
   genActions: {
     display: "flex",
     alignItems: "center",
-    gap: "10px",
+    gap: "12px",
     flexWrap: "wrap",
-    marginTop: "4px",
+    marginTop: "6px",
   },
   genOk: {
-    fontSize: "12.5px",
-    color: "#047857",
+    fontSize: "17px",
+    color: "#2a4d42",
     margin: 0,
     lineHeight: 1.6,
+    fontWeight: "600",
   },
   inlineField: {
     display: "flex",
     flexDirection: "column",
-    gap: "6px",
+    gap: "8px",
   },
   smallLabel: {
-    fontSize: "12px",
+    fontSize: "15px",
     color: TEXT_MID,
-    fontWeight: "600",
+    fontWeight: "800",
     margin: 0,
+    letterSpacing: "0.03em",
   },
   countInput: {
-    width: "72px",
-    padding: "8px 10px",
-    backgroundColor: GRAY_INPUT,
-    border: "1.5px solid transparent",
-    borderRadius: "8px",
-    fontSize: "14px",
+    width: "88px",
+    padding: "14px 12px",
+    backgroundColor: CREAM,
+    border: "1px solid transparent",
+    borderRadius: "2px",
+    fontSize: "18px",
     color: TEXT_DARK,
     fontFamily: "inherit",
+    minHeight: "52px",
+    boxSizing: "border-box",
   },
 
   // Claims
   claimsList: {
     display: "flex",
     flexDirection: "column",
-    gap: "12px",
+    gap: "10px",
   },
   claimCard: {
-    border: '1px solid ' + GRAY_BORDER,
-    borderRadius: "10px",
+    border: "1px solid rgba(164,186,183,0.5)",
+    borderRadius: "2px",
     padding: "14px 16px",
-    backgroundColor: "#fafafa",
+    backgroundColor: "rgba(255,255,255,0.75)",
   },
   claimTopRow: {
     display: "flex",
     alignItems: "flex-start",
     justifyContent: "space-between",
-    gap: "12px",
-    marginBottom: "8px",
+    gap: "14px",
+    marginBottom: "6px",
   },
   claimText: {
-    fontSize: "14.5px",
+    fontSize: "17px",
     fontWeight: "500",
     color: TEXT_DARK,
-    lineHeight: "1.6",
+    lineHeight: "1.65",
     margin: 0,
     flex: 1,
   },
   evidenceWrap: {
-    marginTop: "4px",
+    marginTop: "6px",
     paddingTop: "8px",
-    borderTop: '1px dashed ' + GRAY_BORDER,
+    borderTop: "1px dashed rgba(164,186,183,0.6)",
   },
   evidenceLabel: {
-    fontSize: "10px",
-    fontWeight: "700",
+    fontSize: "12px",
+    fontWeight: "800",
     color: TEXT_FAINT,
     textTransform: "uppercase",
-    letterSpacing: "0.5px",
-    marginBottom: "3px",
+    letterSpacing: "0.08em",
+    marginBottom: "6px",
   },
   evidenceText: {
-    fontSize: "12.5px",
+    fontSize: "16px",
     color: TEXT_MUTED,
-    lineHeight: "1.6",
+    lineHeight: "1.65",
     margin: 0,
     fontStyle: "italic",
   },
@@ -535,35 +694,49 @@ const S = {
     display: "flex",
     alignItems: "center",
     gap: "8px",
-    marginTop: "10px",
+    marginTop: "8px",
   },
   confBarTrack: {
     flex: 1,
-    height: "4px",
-    backgroundColor: GRAY_BORDER,
-    borderRadius: "2px",
+    height: "8px",
+    backgroundColor: GRAY_INPUT,
+    borderRadius: "4px",
     overflow: "hidden",
   },
   confLabel: {
-    fontSize: "11px",
+    fontSize: "15px",
     color: TEXT_FAINT,
-    fontWeight: "600",
-    minWidth: "34px",
+    fontWeight: "700",
+    minWidth: "44px",
     textAlign: "right",
+  },
+
+  footer: {
+    padding: "20px clamp(20px, 4vw, 40px) 28px",
+    borderTop: "1px solid rgba(164,186,183,0.35)",
+    textAlign: "center",
+  },
+  footerText: {
+    fontSize: "11px",
+    letterSpacing: "0.2em",
+    textTransform: "uppercase",
+    color: TEXT_FAINT,
+    fontWeight: 500,
+    margin: 0,
   },
 };
 
 // -- Verdict colours --------------------------------------------
 const VERDICT_STYLE = {
-  supported:    { color: "#059669", bg: "#ecfdf5", border: "#6ee7b7" },
-  unsupported:  { color: "#d97706", bg: "#fffbeb", border: "#fcd34d" },
-  contradicted: { color: "#dc2626", bg: "#fef2f2", border: "#fca5a5" },
-  unverifiable: { color: "#6b7280", bg: "#f3f4f6", border: "#d1d5db" },
+  supported:    { color: "#1e3d36", bg: LIME, border: SAGE },
+  unsupported:  { color: "#6b4a1e", bg: "#f5edd8", border: "#c4a574" },
+  contradicted: { color: BRICK, bg: "#fceae9", border: BRICK },
+  unverifiable: { color: TEXT_MUTED, bg: PAPER, border: SAGE },
 };
 const RISK_PILL = {
-  low:    { color: "#059669", bg: "#ecfdf5" },
-  medium: { color: "#d97706", bg: "#fffbeb" },
-  high:   { color: "#dc2626", bg: "#fef2f2" },
+  low:    { color: "#1e3d36", bg: LIME },
+  medium: { color: "#6b4a1e", bg: "#f5edd8" },
+  high:   { color: BRICK, bg: "#fceae9" },
 };
 
 // -- VerdictBadge -----------------------------------------------
@@ -573,15 +746,15 @@ function VerdictBadge({ verdict = "unverifiable" }) {
   return (
     <span style={{
       fontSize: "11px",
-      fontWeight: "700",
-      padding: "3px 10px",
-      borderRadius: "20px",
+      fontWeight: "600",
+      padding: "8px 14px",
+      borderRadius: "2px",
       whiteSpace: "nowrap",
       border: '1px solid ' + vs.border,
+      letterSpacing: "0.14em",
       backgroundColor: vs.bg,
       color: vs.color,
       textTransform: "uppercase",
-      letterSpacing: "0.4px",
       flexShrink: 0,
     }}>
       {key}
@@ -634,8 +807,8 @@ function ScoreSection({ score }) {
     { num: score.unverifiable ?? 0, label: "Unverifiable" },
   ];
   return (
-    <div>
-      <p style={S.sectionLabel}>Evaluation Score</p>
+    <div style={{ fontFamily: FONT_UI }}>
+      <p style={S.scoreSectionLabel}>Evaluation Score</p>
       <div style={S.sectionCard}>
         {typeof hs === "number" && (
           <div style={S.scoreMeterRow}>
@@ -655,7 +828,7 @@ function ScoreSection({ score }) {
         {score.failure_type && score.failure_type !== "none" && (
           <p style={S.failureType}>Failure mode: {String(score.failure_type).replace(/_/g, " ")}</p>
         )}
-        <div style={{ ...S.statsGrid, marginTop: score.summary ? "14px" : 0 }}>
+        <div style={{ ...S.statsGrid, marginTop: score.summary ? "8px" : 0 }}>
           {stats.map(({ num, label }) => (
             <div key={label} style={S.statBox}>
               <span style={S.statNum}>{num}</span>
@@ -691,7 +864,7 @@ function ClaimCard({ claim }) {
             height: "100%",
             width: pct + "%",
             backgroundColor: vs.color,
-            borderRadius: "2px",
+            borderRadius: "4px",
             transition: "width 0.4s ease",
           }} />
         </div>
@@ -707,7 +880,7 @@ function ClaimsSection({ claims }) {
     <div>
       <p style={S.sectionLabel}>
         Claims Analysis
-        <span style={{ color: TEXT_FAINT, fontWeight: "400", textTransform: "none", letterSpacing: 0 }}>
+        <span style={{ color: TEXT_FAINT, fontWeight: "500", fontSize: "17px", textTransform: "none", letterSpacing: "0.02em" }}>
           {" "}— {claims.length} claim{claims.length !== 1 ? "s" : ""}
         </span>
       </p>
@@ -873,55 +1046,81 @@ function App() {
 
   return (
     <div style={S.page}>
-
-      {/* -- Header --------------------------------- */}
-      <header style={S.header}>
-        <div style={S.headerIcon}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <circle cx="11" cy="11" r="7" stroke="#fff" strokeWidth="2" />
-            <path d="m16.5 16.5 4 4" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
-            <path d="M8 11h6M11 8v6" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
+      <header style={S.nav}>
+        <div style={S.navBrand}>
+          <p style={S.navMark}>Edge Probe</p>
+          <div style={S.navRule} aria-hidden />
         </div>
-        <div style={S.headerTitleBlock}>
-          <p style={S.headerTitle}>Edge Probe</p>
-          <p style={S.headerSub}>AI Hallucination Detection</p>
-        </div>
+        <p style={S.navAside}>
+          Claim-level
+          <br />
+          evaluation
+        </p>
       </header>
 
-      {/* -- Main ----------------------------------- */}
       <main style={S.main}>
-
-        {/* Tool explanation */}
-        <div style={S.introWrap}>
-          <div style={S.infoCard}>
-            <p style={S.infoTitle}>What this tool does</p>
-            <p style={S.infoText}>
-              Edge Probe evaluates AI-generated responses by breaking them into claims and comparing those claims against known reference context to detect possible hallucinations.
-            </p>
-          </div>
-          <div style={S.infoCard}>
-            <p style={S.infoTitle}>How it works</p>
-            <ol style={S.stepsList}>
-              <li style={S.stepItem}>Pick a saved prompt (or generate new edge-case prompts)</li>
-              <li style={S.stepItem}>Run analysis: the model answers, then claims are extracted</li>
-              <li style={S.stepItem}>Each claim is checked against the prompt&apos;s reference context</li>
-              <li style={S.stepItem}>Review the score, summary, and per-claim verdicts</li>
-            </ol>
-          </div>
-        </div>
-
-        {/* Analyze card */}
-        <div style={S.card}>
-          <h2 style={S.cardTitle}>Analyze AI Response</h2>
-          <p style={S.cardSub}>
-            Choose a prompt from your database, or generate new ones below. Then run analysis to score the model answer against reference context.
+        <section style={S.hero}>
+          <p style={S.heroEyebrow}>Hallucination intelligence</p>
+          <h1 style={S.heroTitle}>
+            Clarity for every{" "}
+            <span style={{ fontStyle: "italic", fontWeight: 700, color: BRICK }}>model</span> answer.
+          </h1>
+          <p style={S.heroLead}>
+            Decompose AI output into verifiable claims, ground them in reference text, and
+            see where confidence meets fact—without treating a whole paragraph as a single
+            guess.
           </p>
-          <div style={S.inputBlock}>
+          <div style={S.heroRule} aria-hidden />
+        </section>
+
+        <section style={S.pillars}>
+          <div style={S.pillarsGrid}>
+            <article style={S.pillar}>
+              <p style={S.pillarNum}>01</p>
+              <h2 style={S.pillarTitle}>Decompose</h2>
+              <p style={S.pillarText}>
+                Responses become discrete claims you can scan, question, and trace—rather than
+                one opaque block of prose.
+              </p>
+            </article>
+            <article style={S.pillar}>
+              <p style={S.pillarNum}>02</p>
+              <h2 style={S.pillarTitle}>Ground</h2>
+              <p style={S.pillarText}>
+                Each claim is read against the prompt&apos;s reference context so support is
+                explicit, not assumed.
+              </p>
+            </article>
+            <article style={S.pillar}>
+              <p style={S.pillarNum}>03</p>
+              <h2 style={S.pillarTitle}>Judge</h2>
+              <p style={S.pillarText}>
+                Verdicts, a distilled risk readout, and a plain-language summary complete the
+                picture.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section style={S.studio}>
+          <p style={S.studioEyebrow}>The studio</p>
+          <h2 style={S.studioHeading}>Run an analysis</h2>
+          <p style={S.studioIntro}>
+            Two paths: run the model on something already in your library, or author new
+            edge-case prompts first—each has its own panel below.
+          </p>
+
+          <div style={S.card}>
+          <div style={S.workflowStack}>
+            <div style={{ ...S.workflowCard, ...S.workflowCardRun }}>
+              <p style={{ ...S.workflowCardKicker, color: BRICK }}>Run the model</p>
+              <h3 style={S.workflowCardTitle}>Use a saved prompt</h3>
+              <p style={S.workflowCardLead}>
+                Choose a row from your database or type a numeric ID, then analyze. This is the
+                path for anything you have already stored.
+              </p>
+              <div style={S.inputBlock}>
             <p style={S.inputLabel}>Saved prompts</p>
-            <p style={S.inputHelper}>
-              Loaded from the API ({listLoading ? "refreshing…" : `${prompts.length} in list`}).
-            </p>
             <select
               style={S.selectControl}
               value={selectValue}
@@ -931,7 +1130,7 @@ function App() {
                 setPromptId(v);
                 setError(null);
               }}
-              onFocus={(e) => (e.target.style.borderColor = PURPLE)}
+              onFocus={(e) => (e.target.style.borderColor = ACCENT_FOCUS)}
               onBlur={(e) => (e.target.style.borderColor = "transparent")}
             >
               <option value="">— Select a prompt —</option>
@@ -942,7 +1141,7 @@ function App() {
               ))}
             </select>
 
-            <p style={{ ...S.inputLabel, marginTop: "16px" }}>Prompt ID</p>
+            <p style={{ ...S.inputLabel, marginTop: "10px" }}>Prompt ID</p>
             <p style={S.inputExample}>Or type an ID manually</p>
             <div style={S.inputRow}>
               <input
@@ -953,7 +1152,7 @@ function App() {
                 onChange={(e) => { setPromptId(e.target.value); setError(null); }}
                 onKeyDown={(e) => e.key === "Enter" && !isDisabled && runEvaluation()}
                 style={S.input}
-                onFocus={(e) => (e.target.style.borderColor = PURPLE)}
+                onFocus={(e) => (e.target.style.borderColor = ACCENT_FOCUS)}
                 onBlur={(e)  => (e.target.style.borderColor = "transparent")}
               />
               <button
@@ -981,9 +1180,17 @@ function App() {
                 Refresh list
               </button>
             </div>
+              </div>
+            </div>
 
-            <div style={S.genSection}>
-              <p style={S.genTitle}>Generate edge-case prompts</p>
+            <div style={{ ...S.workflowCard, ...S.workflowCardCreate }}>
+              <p style={{ ...S.workflowCardKicker, color: "#3d524e" }}>Grow the library</p>
+              <h3 style={S.workflowCardTitle}>Generate new prompts</h3>
+              <p style={S.workflowCardLead}>
+                Sample adversarial templates by domain and category, then save them to the
+                database. New IDs appear in the list above when you are done.
+              </p>
+              <div style={S.genSection}>
               <div style={S.genGrid}>
                 <div style={S.inlineField}>
                   <p style={S.smallLabel}>Domain</p>
@@ -1008,6 +1215,7 @@ function App() {
                           checked={genCats.includes(c)}
                           onChange={() => toggleGenCat(c)}
                           disabled={genLoading}
+                          style={{ width: "22px", height: "22px", cursor: genLoading ? "not-allowed" : "pointer", flexShrink: 0 }}
                         />
                         {c.replace(/_/g, " ")}
                       </label>
@@ -1031,62 +1239,62 @@ function App() {
                     type="button"
                     onClick={runGenerate}
                     disabled={genLoading || genCats.length === 0}
-                    style={{ ...S.secondaryBtn, padding: "10px 16px", fontSize: "13px" }}
+                    style={{ ...S.secondaryBtn, padding: "14px 22px" }}
                   >
                     {genLoading ? "Generating…" : "Generate & save"}
                   </button>
                 </div>
               </div>
               {genNotice && (
-                <p style={genNotice.ok ? S.genOk : { ...S.genOk, color: "#b91c1c" }}>
+                <p style={genNotice.ok ? S.genOk : { ...S.genOk, color: INK }}>
                   {genNotice.text}
                 </p>
               )}
+              </div>
             </div>
+          </div>
+          </div>
+        </section>
 
-            <div style={S.demoTipBox}>
-              <p style={S.demoTipTitle}>Configuration</p>
-              <p style={{ margin: 0, lineHeight: "1.7" }}>
-                Point the UI at your API with{" "}
-                <code style={{ fontSize: "12px" }}>VITE_API_BASE_URL</code> (defaults to{" "}
-                <code style={{ fontSize: "12px" }}>http://127.0.0.1:8000</code>).
+        <section style={S.resultsShell}>
+          {result ? (
+            <div style={S.resultWrap}>
+              <p style={S.studioEyebrow}>Results</p>
+              <h2 style={{ ...S.studioHeading, marginBottom: "4px" }}>Your last run</h2>
+              <PromptSection   promptText={result.prompt_text} />
+              <ResponseSection text={result.response_text} />
+              <ScoreSection    score={result.score} />
+              <ClaimsSection   claims={result.claims} />
+            </div>
+          ) : (
+            <div style={S.empty}>
+              <div style={S.emptyIconBox}>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                    stroke={TEXT_FAINT} strokeWidth="1.25" strokeLinejoin="round"
+                  />
+                  <polyline points="14 2 14 8 20 8"
+                    stroke={TEXT_FAINT} strokeWidth="1.25" strokeLinejoin="round" />
+                  <line x1="8" y1="13" x2="16" y2="13"
+                    stroke={TEXT_FAINT} strokeWidth="1.25" strokeLinecap="round" />
+                  <line x1="8" y1="17" x2="12" y2="17"
+                    stroke={TEXT_FAINT} strokeWidth="1.25" strokeLinecap="round" />
+                </svg>
+              </div>
+              <h3 style={S.emptyHeading}>Awaiting your first run</h3>
+              <p style={S.emptySub}>
+                Choose or create a prompt above, then analyze. A structured readout will appear
+                here—prompt, model reply, score, and every claim annotated.
               </p>
             </div>
-          </div>
-        </div>
-
-        {/* Results -- or -- empty state */}
-        {result ? (
-          <div style={S.resultWrap}>
-            <PromptSection   promptText={result.prompt_text} />
-            <ResponseSection text={result.response_text} />
-            <ScoreSection    score={result.score} />
-            <ClaimsSection   claims={result.claims} />
-          </div>
-        ) : (
-          <div style={S.empty}>
-            <div style={S.emptyIconBox}>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
-                  stroke={TEXT_FAINT} strokeWidth="1.5" strokeLinejoin="round"
-                />
-                <polyline points="14 2 14 8 20 8"
-                  stroke={TEXT_FAINT} strokeWidth="1.5" strokeLinejoin="round" />
-                <line x1="8" y1="13" x2="16" y2="13"
-                  stroke={TEXT_FAINT} strokeWidth="1.5" strokeLinecap="round" />
-                <line x1="8" y1="17" x2="12" y2="17"
-                  stroke={TEXT_FAINT} strokeWidth="1.5" strokeLinecap="round" />
-              </svg>
-            </div>
-            <h3 style={S.emptyHeading}>Enter a prompt ID to begin analysis</h3>
-            <p style={S.emptySub}>
-              Edge Probe will scan for potential AI hallucinations and provide detailed scores
-            </p>
-          </div>
-        )}
-
+          )}
+        </section>
       </main>
+
+      <footer style={S.footer}>
+        <p style={S.footerText}>Edge Probe — model evaluation, refined</p>
+      </footer>
     </div>
   );
 }
