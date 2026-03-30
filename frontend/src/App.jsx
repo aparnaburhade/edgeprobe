@@ -219,6 +219,8 @@ const S = {
     padding: "clamp(18px, 3vw, 26px)",
     width: "100%",
     maxWidth: "100%",
+    boxSizing: "border-box",
+    overflowX: "hidden",
   },
 
   workflowStack: {
@@ -231,6 +233,9 @@ const S = {
     padding: "18px 18px 20px",
     border: "1px solid rgba(164,186,183,0.45)",
     backgroundColor: "rgba(255,255,255,0.75)",
+    width: "100%",
+    boxSizing: "border-box",
+    margin: 0,
   },
   workflowCardRun: {
     borderLeft: "4px solid " + BRICK,
@@ -239,6 +244,14 @@ const S = {
   workflowCardCreate: {
     borderLeft: "4px solid " + SAGE,
     backgroundColor: "rgba(242,245,204,0.28)",
+  },
+  workflowCardMobileAccentRun: {
+    borderLeft: "1px solid rgba(164,186,183,0.45)",
+    borderTop: "4px solid " + BRICK,
+  },
+  workflowCardMobileAccentCreate: {
+    borderLeft: "1px solid rgba(164,186,183,0.45)",
+    borderTop: "4px solid " + SAGE,
   },
   workflowCardKicker: {
     fontSize: "10px",
@@ -1125,7 +1138,13 @@ function App() {
 
           <div style={{ ...S.card, ...(isPhone ? { padding: "12px" } : {}) }}>
           <div style={S.workflowStack}>
-            <div style={{ ...S.workflowCard, ...S.workflowCardRun, ...(isPhone ? { padding: "12px 12px 14px" } : {}) }}>
+            <div
+              style={{
+                ...S.workflowCard,
+                ...S.workflowCardRun,
+                ...(isPhone ? { ...S.workflowCardMobileAccentRun, padding: "12px 12px 14px" } : {}),
+              }}
+            >
               <p style={{ ...S.workflowCardKicker, color: BRICK }}>Run the model</p>
               <h3 style={S.workflowCardTitle}>Use a saved prompt</h3>
               <p style={S.workflowCardLead}>
@@ -1200,7 +1219,13 @@ function App() {
               </div>
             </div>
 
-            <div style={{ ...S.workflowCard, ...S.workflowCardCreate, ...(isPhone ? { padding: "12px 12px 14px" } : {}) }}>
+            <div
+              style={{
+                ...S.workflowCard,
+                ...S.workflowCardCreate,
+                ...(isPhone ? { ...S.workflowCardMobileAccentCreate, padding: "12px 12px 14px" } : {}),
+              }}
+            >
               <p style={{ ...S.workflowCardKicker, color: "#3d524e" }}>Grow the library</p>
               <h3 style={S.workflowCardTitle}>Generate new prompts</h3>
               <p style={S.workflowCardLead}>
