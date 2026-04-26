@@ -231,6 +231,7 @@ def _evaluate_single_claim(
         "verdict": verdict,
         "evidence_text": evidence_text,
         "confidence": confidence,
+        "judge_reason": "some explanation"
     }
 
 

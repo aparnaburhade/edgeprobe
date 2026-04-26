@@ -12,10 +12,14 @@ CREATE TABLE IF NOT EXISTS prompts (
 
 CREATE TABLE IF NOT EXISTS model_runs (
     id SERIAL PRIMARY KEY,
+    request_id TEXT,
     prompt_id INTEGER NOT NULL REFERENCES prompts(id) ON DELETE CASCADE,
     model_name VARCHAR(100) NOT NULL,
     response_text TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status TEXT NOT NULL DEFAULT 'started',
+    error_message TEXT,
+    completed_at TIMESTAMP NULL
 );
 
 CREATE TABLE IF NOT EXISTS claims (
