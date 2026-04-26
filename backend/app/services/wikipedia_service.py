@@ -1,69 +1,14 @@
 
-# import requests
+import re #used to clean/tokenize text
+import requests #used to call wikipedia API
+from urllib.parse import quote #used to make titles for wikipedia url safe
 
-# def get_wikipedia_evidence(query: str):
-#     search_url = "https://en.wikipedia.org/w/api.php"
-#     params = {
-#         "action": "query",
-#         "list": "search",
-#         "srsearch": query,
-#         "format": "json"
-#     }
-
-#     response = requests.get(
-#         search_url,
-#         params=params,
-#         headers={"User-Agent": "EdgeProbe/1.0"}
-#     )
-
-#     data = response.json()
-
-#     if not data["query"]["search"]:
-#         return None
-
-#     title = data["query"]["search"][0]["title"]
-
-#     # # Now fetch summary
-#     # summary_url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{title}"
-#     # summary_res = requests.get(summary_url).json()
-
-#     from urllib.parse import quote
-
-#     encoded_title = quote(title)
-#     summary_url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{encoded_title}"
-
-#     summary_response = requests.get(
-#         summary_url,
-#         headers={"User-Agent": "EdgeProbe/1.0"}
-#     )
-
-#     print("SUMMARY URL:", summary_url)
-#     print("SUMMARY STATUS:", summary_response.status_code)
-#     print("SUMMARY TEXT:", summary_response.text[:300])
-
-#     summary_res = summary_response.json()
-#     #return summary_res.get("extract", "")
-
-#     if "extract" not in summary_res:
-#         return None
-
-#     return {
-#         "title": title,
-#         "evidence": summary_res.get("extract", "")
-# }
-
-
-
-import re
-import requests
-from urllib.parse import quote
-
-
+#Wikepedia api urls and a user-agent. A user-agent is required to access wikipedia api, it's lke an ID card.
 USER_AGENT = "EdgeProbe/1.0"
 SEARCH_URL = "https://en.wikipedia.org/w/api.php"
 SUMMARY_URL = "https://en.wikipedia.org/api/rest_v1/page/summary"
 
-
+#List of stopwords to remove
 STOPWORDS = {
     "the", "is", "are", "a", "an", "of", "in", "on", "for", "to",
     "and", "or", "by", "with", "as", "from", "at", "that", "this",

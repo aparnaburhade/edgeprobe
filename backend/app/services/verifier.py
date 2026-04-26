@@ -10,6 +10,7 @@ def verify_claim(claim: str, evidence: str):
     if not evidence or len(evidence.strip()) == 0:
         return {
             "verdict": "unverifiable",
+            "confidence": 0.0,
             "reason": "No evidence provided"
         }
 
@@ -25,6 +26,13 @@ Rules:
 - If evidence clearly disproves the claim → contradicted
 - If evidence is insufficient or unclear → unverifiable
 
+
+Also assign a confidence score between 0 and 1:
+- 0.9–1.0 → very strong evidence
+- 0.7–0.9 → good evidence
+- 0.4–0.7 → weak/partial evidence
+- 0.0–0.4 → very weak or unclear
+
 Claim:
 {claim}
 
@@ -35,6 +43,7 @@ Respond ONLY in valid JSON:
 
 {{
     "verdict": "supported | contradicted | unverifiable",
+    "confidence": number,
     "reason": "short explanation"
 }}
 """
@@ -55,5 +64,6 @@ Respond ONLY in valid JSON:
     except:
         return {
             "verdict": "error",
+            "confidence": 0.0,
             "reason": f"Invalid JSON response: {content}"
         }
