@@ -18,7 +18,7 @@ STOPWORDS = {
 
 def tokenize(text: str):
     text = text.lower()
-    words = re.findall(r"\b[a-zA-Z]+\b", text)
+    words = re.findall(r"\b[a-zA-Z0-9.-]+\b", text)
     return [word for word in words if word not in STOPWORDS]
 
 

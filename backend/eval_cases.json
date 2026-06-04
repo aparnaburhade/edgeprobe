@@ -1,0 +1,37 @@
+[
+  {"claim": "Canberra is the capital of Australia.", "query": "Canberra capital of Australia", "expected": "supported"},
+  {"claim": "Sydney is the capital of Australia.", "query": "Sydney capital of Australia", "expected": "contradicted"},
+  {"claim": "Paris is the capital of France.", "query": "Paris capital of France", "expected": "supported"},
+  {"claim": "Berlin is the capital of Italy.", "query": "Berlin capital of Italy", "expected": "contradicted"},
+  {"claim": "Tokyo is the capital of Japan.", "query": "Tokyo capital of Japan", "expected": "supported"},
+
+  {"claim": "The Amazon rainforest is the largest tropical rainforest in the world.", "query": "Amazon rainforest largest tropical rainforest", "expected": "supported"},
+  {"claim": "The Amazon rainforest is located in Africa.", "query": "Amazon rainforest location continent", "expected": "contradicted"},
+  {"claim": "Mount Everest is the tallest mountain in the world.", "query": "Mount Everest height tallest mountain", "expected": "supported"},
+  {"claim": "Mount Everest is located in South America.", "query": "Mount Everest location country continent", "expected": "contradicted"},
+  {"claim": "The Nile is the longest river in the world.", "query": "Nile river longest river world", "expected": "supported"},
+
+  {"claim": "Python was created by Guido van Rossum.", "query": "Python programming language creator", "expected": "supported"},
+  {"claim": "Java was created by Microsoft.", "query": "Java programming language creator company", "expected": "contradicted"},
+  {"claim": "C++ was developed by Bjarne Stroustrup.", "query": "C++ creator Bjarne Stroustrup", "expected": "supported"},
+  {"claim": "JavaScript was developed by Brendan Eich.", "query": "JavaScript creator Brendan Eich", "expected": "supported"},
+  {"claim": "Python was developed in the 1980s.", "query": "Python programming language history year created", "expected": "contradicted"},
+
+  {"claim": "The Earth revolves around the Sun.", "query": "Earth revolves around Sun fact", "expected": "supported"},
+  {"claim": "The Sun revolves around the Earth.", "query": "Sun revolves around Earth fact", "expected": "contradicted"},
+  {"claim": "Water boils at 100 degrees Celsius at sea level.", "query": "water boiling point Celsius sea level", "expected": "supported"},
+  {"claim": "Water boils at 50 degrees Celsius.", "query": "water boiling temperature Celsius", "expected": "contradicted"},
+  {"claim": "Humans have 206 bones.", "query": "number of bones in human body", "expected": "supported"},
+
+  {"claim": "Albert Einstein developed the theory of relativity.", "query": "Einstein theory of relativity", "expected": "supported"},
+  {"claim": "Isaac Newton discovered electricity.", "query": "who discovered electricity history", "expected": "contradicted"},
+  {"claim": "Nikola Tesla contributed to the development of alternating current.", "query": "Nikola Tesla alternating current contribution", "expected": "supported"},
+  {"claim": "Thomas Edison invented the telephone.", "query": "telephone inventor history", "expected": "contradicted"},
+  {"claim": "Alexander Graham Bell invented the telephone.", "query": "Alexander Graham Bell telephone invention", "expected": "supported"},
+
+  {"claim": "The Great Wall of China is visible from space.", "query": "Great Wall of China visible from space myth", "expected": "contradicted"},
+  {"claim": "The human heart pumps blood through the body.", "query": "function of heart in human body", "expected": "supported"},
+  {"claim": "Sharks are mammals.", "query": "are sharks mammals or fish", "expected": "contradicted"},
+  {"claim": "Dolphins are mammals.", "query": "are dolphins mammals", "expected": "supported"},
+  {"claim": "The speed of light is approximately 300,000 km per second.", "query": "speed of light km per second", "expected": "supported"}
+]

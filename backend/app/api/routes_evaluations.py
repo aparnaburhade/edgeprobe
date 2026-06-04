@@ -8,16 +8,16 @@ Pipeline
   POST /run  { run_id: int }
       │
       ├─ 1. Fetch run record from stub store
-      │       → { prompt_text, reference_context, response_text }
+            │       → { prompt_text, response_text }
       │
       ├─ 2. Extract factual claims from response_text
       │       → List[{ claim_text }]
       │
-      ├─ 3. Evaluate each claim against reference_context
+            ├─ 3. Evaluate each claim with Wikipedia retrieval + verifier
       │       → List[{ claim_text, verdict, evidence_text, confidence }]
       │
       ├─ 4. Compute hallucination score
-      │       → { hallucination_score, risk_level, failure_type, summary }
+            │       → { hallucination_score, risk, failure_type, summary }
       │
       └─ 5. Return { claims, evaluation }
 """
@@ -39,8 +39,7 @@ router = APIRouter()
 # ---------------------------------------------------------------------------
 # Stubbed run store
 # ---------------------------------------------------------------------------
-# Each record contains the model's response alongside the ground-truth
-# reference context used to verify claims.
+# Each record contains model responses for end-to-end evaluation.
 # Replace `_get_run_from_db` with a real repository call when ready.
 
 _RUN_STORE: dict[int, dict[str, str]] = {
@@ -53,12 +52,6 @@ _RUN_STORE: dict[int, dict[str, str]] = {
             "However, Type 1 diabetes is not reversible as it is an autoimmune condition. "
             "Regular exercise also plays a critical role alongside diet."
         ),
-        "reference_context": (
-            "Type 2 diabetes remission is achievable in some patients through diet and weight loss. "
-            "Type 1 diabetes is an autoimmune disease and cannot be reversed by diet. "
-            "Low-calorie diets have been shown in clinical trials to normalise blood glucose in Type 2 patients. "
-            "Exercise improves insulin sensitivity but does not cure diabetes."
-        ),
     },
     2: {
         "prompt_text": "What are the main trade-offs between REST and GraphQL?",
@@ -70,13 +63,6 @@ _RUN_STORE: dict[int, dict[str, str]] = {
             "GraphQL eliminates over-fetching and under-fetching of data. "
             "REST does not support real-time subscriptions natively."
         ),
-        "reference_context": (
-            "REST APIs expose fixed endpoints and return full resource representations. "
-            "GraphQL was developed internally at Facebook in 2012 and released publicly in 2015. "
-            "GraphQL enables clients to specify precise data requirements, reducing over-fetching. "
-            "HTTP caching is straightforward with REST but more complex with GraphQL. "
-            "GraphQL supports real-time data via subscriptions."
-        ),
     },
     3: {
         "prompt_text": "What are second-order effects of electric vehicle adoption?",
@@ -86,13 +72,6 @@ _RUN_STORE: dict[int, dict[str, str]] = {
             "Oil-dependent economies may experience severe economic disruption. "
             "Lithium mining for batteries has been proven to have zero environmental impact. "
             "Public charging infrastructure investment will create new jobs."
-        ),
-        "reference_context": (
-            "Electric vehicles reduce tailpipe emissions and improve urban air quality. "
-            "Increased EV adoption places higher demand on electricity grids. "
-            "Countries reliant on oil exports face economic risks from declining demand. "
-            "Lithium and cobalt mining for batteries raises environmental and ethical concerns. "
-            "Expansion of charging networks is expected to generate employment in new sectors."
         ),
     },
 }
@@ -137,7 +116,7 @@ class EvaluationResponse(BaseModel):
     summary="Run end-to-end hallucination evaluation for an LLM run",
     description=(
         "Fetches the stored run, extracts factual claims from the model response, "
-        "evaluates each claim against the reference context, computes a hallucination "
+        "evaluates each claim via Wikipedia retrieval and verifier logic, computes a hallucination "
         "score, and returns the full evaluation results."
     ),
 )
@@ -154,8 +133,6 @@ def run_evaluation(request: EvaluationRequest) -> EvaluationResponse:
 
     prompt_text = run["prompt_text"]
     response_text = run["response_text"]
-    reference_context = run["reference_context"]
-
     logger.info("Starting evaluation pipeline for run_id=%d", request.run_id)
 
     # 2. Extract claims
@@ -170,9 +147,9 @@ def run_evaluation(request: EvaluationRequest) -> EvaluationResponse:
     if not raw_claims:
         logger.warning("run_id=%d — no claims extracted from response.", request.run_id)
 
-    # 3. Evaluate claims against reference context
+    # 3. Evaluate claims via Wikipedia-backed detector
     try:
-        evaluated_claims = evaluate_claims(raw_claims, reference_context)
+        evaluated_claims = evaluate_claims(raw_claims, "")
     except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -186,7 +163,7 @@ def run_evaluation(request: EvaluationRequest) -> EvaluationResponse:
         "Evaluation complete | run_id=%d  score=%d  risk=%s  failure=%s",
         request.run_id,
         score_result["hallucination_score"],
-        score_result["risk_level"],
+        score_result["risk"],
         score_result["failure_type"],
     )
 
