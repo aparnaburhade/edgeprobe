@@ -34,7 +34,7 @@ def _get_client() -> OpenAI:
 # ---------------------------------------------------------------------------
 
 DEFAULT_MODEL: str = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
-DEFAULT_TEMPERATURE: float = 0.2   # low temperature → more deterministic answers
+DEFAULT_TEMPERATURE: float = 0   # low temperature → more deterministic answers
 MAX_TOKENS_RESPONSE: int = 1024
 MAX_TOKENS_CLAIMS: int = 512
 

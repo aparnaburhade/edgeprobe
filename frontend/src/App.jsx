@@ -742,7 +742,6 @@ const S = {
 // -- Verdict colours --------------------------------------------
 const VERDICT_STYLE = {
   supported:    { color: "#1e3d36", bg: LIME, border: SAGE },
-  unsupported:  { color: "#6b4a1e", bg: "#f5edd8", border: "#c4a574" },
   contradicted: { color: BRICK, bg: "#fceae9", border: BRICK },
   unverifiable: { color: TEXT_MUTED, bg: PAPER, border: SAGE },
 };
@@ -815,7 +814,6 @@ function ScoreSection({ score, isPhone }) {
   const hs   = score.hallucination_score;
   const stats = [
     { num: score.supported    ?? 0, label: "Supported"    },
-    { num: score.unsupported  ?? 0, label: "Unsupported"  },
     { num: score.contradicted ?? 0, label: "Contradicted" },
     { num: score.unverifiable ?? 0, label: "Unverifiable" },
   ];
@@ -825,9 +823,9 @@ function ScoreSection({ score, isPhone }) {
       <div style={{ ...S.sectionCard, ...(isPhone ? { padding: "14px 14px" } : {}) }}>
         {typeof hs === "number" && (
           <div style={S.scoreMeterRow}>
-            <span style={S.scoreMeterValue}>{hs}</span>
+            <span style={S.scoreMeterValue}>{hs}%</span>
             <span style={S.scoreMeterHint}>
-              Hallucination index (0 = best, 100 = worst). Based on claim verdicts vs reference text.
+              Hallucination score from claim checks against reference evidence.
             </span>
           </div>
         )}

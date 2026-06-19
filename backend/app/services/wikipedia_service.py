@@ -1,18 +1,15 @@
+import re
+import requests
+from urllib.parse import quote
 
-import re #used to clean/tokenize text
-import requests #used to call wikipedia API
-from urllib.parse import quote #used to make titles for wikipedia url safe
-
-#Wikepedia api urls and a user-agent. A user-agent is required to access wikipedia api, it's lke an ID card.
 USER_AGENT = "EdgeProbe/1.0"
 SEARCH_URL = "https://en.wikipedia.org/w/api.php"
 SUMMARY_URL = "https://en.wikipedia.org/api/rest_v1/page/summary"
 
-#List of stopwords to remove
 STOPWORDS = {
     "the", "is", "are", "a", "an", "of", "in", "on", "for", "to",
     "and", "or", "by", "with", "as", "from", "at", "that", "this",
-    "it", "was", "were", "be", "been", "being"
+    "it", "was", "were", "be", "been", "being", "did", "not"
 }
 
 
@@ -22,20 +19,32 @@ def tokenize(text: str):
     return [word for word in words if word not in STOPWORDS]
 
 
+def build_search_query(claim: str) -> str:
+    words = tokenize(claim)
+
+    # Remove years like 1800s, 1970s, 2000s, 1970
+    words = [w for w in words if not re.fullmatch(r"\d{3,4}s?", w)]
+
+    # Keep useful keywords only
+    important_words = [w for w in words if len(w) > 2]
+
+    return " ".join(important_words[:8])
+
+
 def get_top_k_titles(query: str, k: int = 3):
     params = {
         "action": "query",
         "list": "search",
         "srsearch": query,
         "format": "json",
-        "srlimit": k
+        "srlimit": k,
     }
 
     response = requests.get(
         SEARCH_URL,
         params=params,
         headers={"User-Agent": USER_AGENT},
-        timeout=10
+        timeout=10,
     )
 
     response.raise_for_status()
@@ -53,7 +62,7 @@ def fetch_summary(title: str):
     response = requests.get(
         summary_url,
         headers={"User-Agent": USER_AGENT},
-        timeout=10
+        timeout=10,
     )
 
     if response.status_code != 200:
@@ -66,23 +75,23 @@ def fetch_summary(title: str):
 
     return {
         "title": title,
-        "evidence": data.get("extract", "")
+        "evidence": data.get("extract", ""),
     }
 
 
-def score_candidate(query: str, candidate: dict):
+def score_candidate(original_claim: str, candidate: dict):
     title = candidate["title"]
     evidence = candidate["evidence"]
 
-    query_words = set(tokenize(query))
+    claim_words = set(tokenize(original_claim))
     title_words = set(tokenize(title))
     evidence_words = set(tokenize(evidence))
 
-    if not query_words:
+    if not claim_words:
         return 0
 
-    title_overlap = len(query_words & title_words)
-    evidence_overlap = len(query_words & evidence_words)
+    title_overlap = len(claim_words & title_words)
+    evidence_overlap = len(claim_words & evidence_words)
 
     score = 0
     score += title_overlap * 3
@@ -92,7 +101,9 @@ def score_candidate(query: str, candidate: dict):
 
 
 def get_wikipedia_evidence(query: str, k: int = 3):
-    titles = get_top_k_titles(query, k)
+    search_query = build_search_query(query)
+
+    titles = get_top_k_titles(search_query, k)
 
     if not titles:
         return None
@@ -121,11 +132,12 @@ def get_wikipedia_evidence(query: str, k: int = 3):
         "title": best_candidate["title"],
         "evidence": best_candidate["evidence"],
         "retrieval_score": best_score,
+        "search_query": search_query,
         "candidates": [
             {
                 "title": candidate["title"],
-                "score": score
+                "score": score,
             }
             for score, candidate in scored_candidates
-        ]
+        ],
     }

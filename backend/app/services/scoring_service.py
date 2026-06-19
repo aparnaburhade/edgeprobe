@@ -9,7 +9,6 @@ Each verdict carries a weight that contributes to the raw penalty:
 
   supported     →  0   (no penalty)
   unverifiable  →  1   (mild — absence of evidence is not evidence of absence)
-  unsupported   →  2   (moderate — claim has no grounding)
   contradicted  →  4   (severe — claim actively conflicts with context)
 
   raw_penalty  = Σ weight_i
@@ -30,9 +29,8 @@ Failure type
 ~~~~~~~~~~~~
 Describes the dominant failure mode:
   "contradiction"          — at least one claim directly conflicts with context
-  "high_unsupported"       — > 50 % of claims are unsupported
   "high_unverifiable"      — > 50 % of claims cannot be verified
-  "mixed_hallucination"    — a mix of unsupported / unverifiable failures
+    "mixed_hallucination"    — a mix of supported / unverifiable outcomes
   "none"                   — no failures detected
 """
 
@@ -49,7 +47,6 @@ logger = logging.getLogger(__name__)
 _VERDICT_WEIGHTS: dict[str, int] = {
     "supported": 0,
     "unverifiable": 1,
-    "unsupported": 2,
     "contradicted": 4,
 }
 
@@ -73,7 +70,9 @@ def _count_verdicts(claims: list[dict[str, Any]]) -> dict[str, int]:
     """Return a frequency map of verdict labels across all claims."""
     counts: dict[str, int] = {v: 0 for v in _VERDICT_WEIGHTS}
     for claim in claims:
-        verdict = claim.get("verdict", "unverifiable")
+        verdict = str(claim.get("verdict", "unverifiable")).strip().lower()
+        if verdict == "unsupported":
+            verdict = "contradicted"
         if verdict in counts:
             counts[verdict] += 1
         else:
@@ -109,19 +108,15 @@ def _failure_type(counts: dict[str, int], n_claims: int) -> str:
     if n_claims == 0:
         return "none"
 
-    unsupported_rate = counts["unsupported"] / n_claims
     unverifiable_rate = counts["unverifiable"] / n_claims
 
     if counts["supported"] == n_claims:
         return "none"
 
-    if unsupported_rate > 0.50:
-        return "high_unsupported"
-
     if unverifiable_rate > 0.50:
         return "high_unverifiable"
 
-    if counts["unsupported"] > 0 or counts["unverifiable"] > 0:
+    if counts["unverifiable"] > 0:
         return "mixed_hallucination"
 
     return "none"
@@ -147,10 +142,6 @@ def _build_summary(
     if counts["contradicted"]:
         parts.append(
             f"{counts['contradicted']} claim(s) directly contradict the reference context."
-        )
-    if counts["unsupported"]:
-        parts.append(
-            f"{counts['unsupported']} claim(s) have no grounding in the reference context."
         )
     if counts["unverifiable"]:
         parts.append(
@@ -182,7 +173,6 @@ def compute_score(evaluated_claims: list[dict[str, Any]]) -> dict[str, Any]:
 
     return {
         "supported": counts["supported"],
-        "unsupported": counts["unsupported"],
         "contradicted": counts["contradicted"],
         "unverifiable": counts["unverifiable"],
         "hallucination_score": hallucination_score,

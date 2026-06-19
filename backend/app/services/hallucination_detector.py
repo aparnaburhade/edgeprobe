@@ -17,12 +17,14 @@ from app.services.wikipedia_service import get_wikipedia_evidence
 logger = logging.getLogger(__name__)
 
 _ALLOWED_VERDICTS: frozenset[str] = frozenset(
-    {"supported", "contradicted", "unverifiable", "unsupported"}
+    {"supported", "contradicted", "unverifiable"}
 )
 
 
 def _normalise_verdict(raw_verdict: Any) -> str:
     verdict = str(raw_verdict or "").strip().lower()
+    if verdict == "unsupported":
+        return "contradicted"
     if verdict in _ALLOWED_VERDICTS:
         return verdict
     return "unverifiable"

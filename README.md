@@ -46,9 +46,10 @@ This pipeline allows fine-grained inspection of where hallucinations occur.
     - `contradicted`  
     - `unverifiable`  
   - Uses **temperature = 0** for consistent and deterministic outputs  
+  - Any legacy `unsupported` verdict is normalised to `contradicted` to keep a single 3-label taxonomy across backend and frontend  
 
 - **Risk Scoring**  
-  Aggregates claim-level verdicts into an overall hallucination risk score  
+  Aggregates the three claim-level verdict buckets (`supported`, `contradicted`, `unverifiable`) into an overall hallucination risk score  
 
 - **Frontend Dashboard**  
   Allows users to inspect:
@@ -56,7 +57,7 @@ This pipeline allows fine-grained inspection of where hallucinations occur.
   - AI-generated response  
   - extracted claims  
   - retrieved evidence  
-  - verification results  
+  - verification results (displayed in the same 3 verdict categories)  
 
 ---
 
