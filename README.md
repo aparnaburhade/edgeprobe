@@ -22,6 +22,9 @@ Every claim in a response gets its own verdict. You can see exactly where the mo
 
 ## How it works
 
+![EdgeProbe results view](screenshots/edgeprobe_pipeline_flowchart.png)
+
+
 **1. You ask a question**  
 Type anything into the interface. EdgeProbe sends it to the LLM and captures the response.
 
