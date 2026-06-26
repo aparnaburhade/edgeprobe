@@ -1,142 +1,123 @@
 # EdgeProbe
 
-EdgeProbe is a claim-level hallucination detection system for evaluating LLM responses.
+**Claim-level hallucination detection for LLM responses.**
 
-Instead of treating an AI response as a single block of text, EdgeProbe breaks it down into individual claims and verifies each claim against external evidence.
-
----
-
-## Why I built this
-
-While building AI-powered applications, I noticed that most systems focus on generation, but not enough on evaluation.
-
-**How do we know if an LLM response is actually reliable?**
-
-EdgeProbe explores this by treating LLM outputs as something to be *tested*, not just consumed.
+EdgeProbe breaks an AI response into individual, verifiable facts — then checks each one against live web sources and returns a structured verdict. Instead of asking *"is this response good?"*, it asks *"which specific claims are supported, which are wrong, and which can't be verified?"*
 
 ---
 
-## Key Idea
-LLM Output → Claims → Evidence Retrieval → Verification → Risk Score
+## The core idea
 
+Most AI evaluation tools treat a response as a single blob of text and hand back a score. That tells you very little.
 
-This pipeline allows fine-grained inspection of where hallucinations occur.
+EdgeProbe takes a different approach, grounded in research from [FActScore (Min et al., EMNLP 2023)](https://arxiv.org/abs/2305.14251), [SAFE (Wei et al., NeurIPS 2024)](https://arxiv.org/abs/2403.18802), and [SelfCheckGPT (Manakul et al., EMNLP 2023)](https://arxiv.org/abs/2303.08896):
 
----
+```
+Question → LLM Response → Atomic Claims → Web Evidence → Verdict per Claim → Risk Score
+```
 
-## Features
-
-- **Adversarial Prompt Generation**  
-  Creates edge-case prompts such as ambiguity, misleading context, near-fact scenarios, and multi-hop reasoning
-
-- **Claim Extraction**  
-  Breaks LLM responses into atomic factual claims
-
-- **Wikipedia-based Evidence Retrieval**  
-  - Retrieves top-k relevant Wikipedia pages  
-  - Ranks them using lexical overlap between:
-    - claim/query  
-    - page title  
-    - summary evidence  
-  - Selects the most relevant source instead of blindly using the first search result  
-
-- **Claim Verification**  
-  - Uses an LLM to classify each claim as:
-    - `supported`  
-    - `contradicted`  
-    - `unverifiable`  
-  - Uses **temperature = 0** for consistent and deterministic outputs  
-  - Any legacy `unsupported` verdict is normalised to `contradicted` to keep a single 3-label taxonomy across backend and frontend  
-
-- **Risk Scoring**  
-  Aggregates the three claim-level verdict buckets (`supported`, `contradicted`, `unverifiable`) into an overall hallucination risk score  
-
-- **Frontend Dashboard**  
-  Allows users to inspect:
-  - original prompt  
-  - AI-generated response  
-  - extracted claims  
-  - retrieved evidence  
-  - verification results (displayed in the same 3 verdict categories)  
-
----
-
-## Recent Improvements
-
-### Retrieval Fix (Key Improvement)
-
-**Previously:**
-- Used only the top-1 Wikipedia search result  
-- This often returned incorrect or loosely related pages  
-
-**Now:**
-- Retrieve top-k results (k = 3)  
-- Score each candidate using:
-  - word overlap with query/claim  
-  - title importance weighting  
-- Select the best-matching page  
-
-**Impact:**
-- More accurate evidence retrieval  
-- Reduced false positives in verification  
+Every claim in a response gets its own verdict. You can see exactly where the model got things right, where it hallucinated, and where the evidence simply doesn't exist.
 
 ---
 
 ## How it works
 
-1. A prompt is generated and stored  
-2. The prompt is sent to an LLM  
-3. The response is stored  
-4. The response is decomposed into claims  
-5. Each claim is converted into search queries  
-6. Evidence is retrieved from Wikipedia  
-7. Claims are verified against evidence  
-8. A risk score is computed  
+**1. You ask a question**  
+Type anything into the interface. EdgeProbe sends it to the LLM and captures the response.
 
----
+**2. Claim extraction**  
+An LLM decomposes the response into atomic factual claims — not sentence splits, but semantically complete statements with all entity references resolved. *"He proposed the idea"* becomes *"Albert Einstein proposed the idea of using rockets in 1917."*
 
-## Tech Stack
+**3. Evidence retrieval**  
+Each claim is searched against live web sources via the Serper API (Google Search). EdgeProbe pulls structured evidence from answer boxes, knowledge graphs, and top organic results — with Wikipedia as a fallback when web search isn't available.
 
-### Backend
-- FastAPI  
-- Python  
-- PostgreSQL  
-- SQLAlchemy  
-- OpenAI API  
+**4. Claim verification**  
+A second LLM call classifies each claim against the retrieved evidence at `temperature=0` for deterministic outputs:
 
-### Frontend
-- React  
-- Vite  
+| Verdict | Meaning |
+|---|---|
+| `supported` | Evidence confirms the claim |
+| `contradicted` | Evidence directly conflicts with the claim |
+| `unverifiable` | No usable evidence found either way |
+
+**5. Risk scoring**  
+Claims are weighted by their verdict — contradictions carry far more penalty than unverifiable claims — and aggregated into a 0–100 hallucination score with a `low / medium / high` risk level. Any contradicted claim forces the risk level to at least `high`.
+
+```
+supported     → weight 0   (no penalty)
+unverifiable  → weight 1   (mild — absence of evidence ≠ evidence of absence)
+contradicted  → weight 4   (severe — claim actively conflicts with evidence)
+
+hallucination_score = (raw_penalty / max_penalty) × 100
+```
 
 ---
 
 ## Example
 
-**Claim:**  
-The capital of Australia is Sydney  
+**Question:** What can you tell me about Nikola Tesla?
 
-**Retrieved Evidence:**  
-Canberra is the capital city of Australia  
+**One extracted claim:** *"Tesla was born on July 10, 1856, in Smiljan, Croatia."*
 
-**Verdict:**  
-Contradicted  
+**Retrieved evidence:** Web search → *"Nikola Tesla was born on July 10, 1856, in Smiljan, Austrian Empire (modern-day Croatia)."*
 
----
-
-## Future Improvements
-
-- Confidence scoring for verification  
-- Multi-source retrieval beyond Wikipedia  
-- Better query decomposition  
-- Evaluation metrics for retrieval quality  
-- Caching and performance optimization  
+**Verdict:** `supported` — 94% confidence ✓
 
 ---
 
-## Why this project matters
+## Tech stack
 
-EdgeProbe focuses on a critical problem in AI systems:
+| Layer | Stack |
+|---|---|
+| Backend | FastAPI · Python · PostgreSQL · SQLAlchemy |
+| LLM | OpenAI `gpt-4o-mini` |
+| Evidence retrieval | Serper API (Google Search) · Wikipedia fallback |
+| Frontend | React · Vite (single-file, inline styles) |
+| Hosting | Render (backend + DB) · Vite dev server (frontend) |
 
-> Not just generating answers — but verifying them.
+---
 
-It reflects real-world challenges in building reliable AI systems, especially in domains where correctness matters.
+## Features
+
+- **Direct question input** — ask any question; no pre-generated prompts required
+- **LLM-based claim extraction** — coreference resolution, entity grounding, no sentence fragments
+- **Live web search** — Serper API pulls real-time Google results, not just static Wikipedia
+- **Source attribution** — every claim links back to the page it was verified against
+- **Weighted risk scoring** — contradictions penalised 4× harder than unverifiable claims
+- **Adversarial prompt library** — generate edge-case prompts by domain and failure category (ambiguity, near-fact, misleading context, multi-hop)
+- **Deterministic verification** — `temperature=0` for reproducible verdicts
+
+---
+
+## Research grounding
+
+EdgeProbe's pipeline is directly informed by three papers:
+
+**FActScore** (Min et al., EMNLP 2023) introduced atomic fact decomposition — the same claim-level granularity EdgeProbe uses. Their key finding: paragraph-level evaluation masks the fact that LLMs are often *partially* correct, and granularity reveals exactly where and how models fail.
+
+**SAFE** (Wei et al., NeurIPS 2024) extended this with multi-step Google Search per claim and an F1-based metric that balances precision and recall across supported facts. EdgeProbe adopts the web-search retrieval approach from SAFE.
+
+**SelfCheckGPT** (Manakul et al., EMNLP 2023) showed that hallucinations can be detected by sampling the same prompt multiple times and checking for consistency — without needing any external reference. This informed the scoring philosophy: inconsistency is a signal, not just a mismatch with a fixed source.
+
+---
+
+## What's next
+
+- [ ] Multi-hop claim resolution (decompose complex claims before searching)
+- [ ] Sampling-based consistency check (SelfCheckGPT-style) alongside retrieval
+- [ ] F1 metric over supported facts (FActScore-compatible)
+- [ ] Confidence calibration across retrieval + verification steps
+- [ ] Side-by-side model comparison (same question, two models, compare scores)
+- [ ] Caching layer for repeated claim lookups
+
+---
+
+## Why this matters
+
+Hallucination is one of the hardest unsolved problems in deploying LLMs reliably. EdgeProbe doesn't try to prevent hallucinations at generation time — it catches them after the fact, at the granularity where they actually live: individual claims.
+
+> Not just generating answers — but knowing which ones to trust.
+
+---
+
+*Built by [Aparna Burhade](https://github.com/aparnaburhade)*
