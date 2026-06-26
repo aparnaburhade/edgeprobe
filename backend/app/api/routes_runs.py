@@ -30,6 +30,10 @@ class ExecuteRequest(BaseModel):
     prompt_id: int = Field(..., gt=0, description="ID of the stored prompt to run.", examples=[1])
 
 
+class DirectExecuteRequest(BaseModel):
+    prompt_text: str = Field(..., min_length=1, description="The question or prompt to evaluate.", examples=["What caused the 2008 financial crisis?"])
+
+
 class ExecuteResponse(BaseModel):
     prompt_text: str
     response_text: str
@@ -38,8 +42,44 @@ class ExecuteResponse(BaseModel):
 
 
 # ---------------------------------------------------------------------------
-# Endpoint
+# Endpoints
 # ---------------------------------------------------------------------------
+
+@router.post(
+    "/execute-direct",
+    response_model=ExecuteResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Ask a question directly — no prompt ID needed",
+)
+def execute_run_direct(request: DirectExecuteRequest) -> ExecuteResponse:
+    """Accept a free-form question, get the LLM response, and run full hallucination analysis."""
+    prompt_text = request.prompt_text.strip()
+    if not prompt_text:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="prompt_text must not be empty.",
+        )
+
+    try:
+        response_text = get_model_response(prompt_text)
+        claims = extract_claims_from_text(response_text, use_llm=True)
+        evaluated_claims = evaluate_claims(claims, "")
+        score = compute_score(evaluated_claims)
+
+        return ExecuteResponse(
+            prompt_text=prompt_text,
+            response_text=response_text,
+            claims=evaluated_claims,
+            score=score,
+        )
+
+    except Exception as exc:
+        logger.exception("Direct execute failed: %s", exc)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Analysis failed: {exc}",
+        ) from exc
+
 
 @router.post(
     "/execute",
@@ -296,7 +336,7 @@ def execute_run(request: ExecuteRequest) -> ExecuteResponse:
             },
         )
 
-        claims = extract_claims_from_text(response_text)
+        claims = extract_claims_from_text(response_text, use_llm=True)
         evaluated_claims = evaluate_claims(claims, reference_context)
         score = compute_score(evaluated_claims)
 

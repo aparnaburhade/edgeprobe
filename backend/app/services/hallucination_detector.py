@@ -1,8 +1,7 @@
-"""Wikipedia-backed hallucination detector.
+"""Web search-backed hallucination detector.
 
-This module replaces the previous rule-based detector. It retrieves evidence
-from Wikipedia for each claim and then classifies the claim via the verifier
-service.
+Retrieves evidence for each claim using Serper web search (primary) with
+Wikipedia as a fallback. Classifies claims via the verifier service.
 
 The public signature of `evaluate_claims` is kept for compatibility with
 existing route handlers.
@@ -12,6 +11,7 @@ import logging
 from typing import Any
 
 from app.services.verifier import verify_claim
+from app.services.web_search_service import get_web_evidence
 from app.services.wikipedia_service import get_wikipedia_evidence
 
 logger = logging.getLogger(__name__)
@@ -43,15 +43,26 @@ def _evaluate_single_claim(claim: dict[str, Any]) -> dict[str, Any]:
         }
 
     try:
-        evidence_result = get_wikipedia_evidence(claim_text)
+        # --- Primary: web search ---
+        evidence_result = get_web_evidence(claim_text)
+        source = "web"
+
+        # --- Fallback: Wikipedia ---
+        if not evidence_result:
+            logger.debug("Web search returned nothing for claim, falling back to Wikipedia: %s", claim_text[:60])
+            evidence_result = get_wikipedia_evidence(claim_text)
+            source = "wikipedia"
+
         if not evidence_result:
             return {
                 "claim_text": claim_text,
                 "verdict": "unverifiable",
                 "evidence_text": "",
                 "confidence": 0.0,
-                "judge_reason": "No Wikipedia evidence found.",
+                "judge_reason": "No evidence found via web search or Wikipedia.",
                 "source_title": "",
+                "source": "none",
+                "source_url": "",
             }
 
         evidence_text = evidence_result.get("evidence", "")
@@ -70,6 +81,8 @@ def _evaluate_single_claim(claim: dict[str, Any]) -> dict[str, Any]:
             "confidence": max(0.0, min(1.0, confidence)),
             "judge_reason": str(verifier_result.get("reason", "")).strip(),
             "source_title": str(evidence_result.get("title", "")),
+            "source": source,
+            "source_url": str(evidence_result.get("source_url", "")),
             "retrieval_score": evidence_result.get("retrieval_score", 0),
             "candidates": evidence_result.get("candidates", []),
         }

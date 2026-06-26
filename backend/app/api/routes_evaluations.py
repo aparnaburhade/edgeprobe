@@ -137,7 +137,7 @@ def run_evaluation(request: EvaluationRequest) -> EvaluationResponse:
 
     # 2. Extract claims
     try:
-        raw_claims = extract_claims_from_text(response_text)
+        raw_claims = extract_claims_from_text(response_text, use_llm=True)
     except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,

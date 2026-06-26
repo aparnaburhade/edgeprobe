@@ -177,7 +177,7 @@ const S = {
 
   studio: {
     padding: "clamp(28px, 5vw, 48px) clamp(20px, 4vw, 40px) clamp(36px, 6vw, 64px)",
-    maxWidth: "680px",
+    maxWidth: "760px",
     margin: "0 auto",
     width: "100%",
     boxSizing: "border-box",
@@ -751,6 +751,39 @@ const RISK_PILL = {
   high:   { color: BRICK, bg: "#fceae9" },
 };
 
+// -- SourceBadge ------------------------------------------------
+function SourceBadge({ source, sourceUrl }) {
+  if (!source || source === "none") return null;
+
+  const isWeb = source === "web";
+  let domain = "";
+  if (isWeb && sourceUrl) {
+    try { domain = new URL(sourceUrl).hostname.replace(/^www\./, ""); } catch (_) {}
+  }
+  const label = isWeb ? (domain || "Web") : "Wikipedia";
+  const badgeStyle = {
+    fontSize: "10px",
+    fontWeight: "700",
+    padding: "3px 8px",
+    borderRadius: "2px",
+    letterSpacing: "0.08em",
+    textTransform: "uppercase",
+    whiteSpace: "nowrap",
+    backgroundColor: isWeb ? "#dbeafe" : LIME,
+    color:           isWeb ? "#1e3a5f" : "#1e3d36",
+    textDecoration: "none",
+    display: "inline-block",
+  };
+  if (isWeb && sourceUrl) {
+    return (
+      <a href={sourceUrl} target="_blank" rel="noreferrer" style={badgeStyle} title={sourceUrl}>
+        ↗ {label}
+      </a>
+    );
+  }
+  return <span style={badgeStyle}>{label}</span>;
+}
+
 // -- VerdictBadge -----------------------------------------------
 function VerdictBadge({ verdict = "unverifiable" }) {
   const key = verdict.toLowerCase();
@@ -779,14 +812,19 @@ function PromptSection({ promptText }) {
   const hasPrompt = typeof promptText === "string" && promptText.trim().length > 0;
   return (
     <div>
-      <p style={S.sectionLabel}>Prompt</p>
-      <div style={S.sectionCard}>
+      <p style={S.sectionLabel}>You asked</p>
+      <div style={{
+        ...S.sectionCard,
+        backgroundColor: "rgba(255,255,255,0.6)",
+        borderLeft: "3px solid " + SAGE,
+        paddingLeft: "18px",
+      }}>
         {hasPrompt ? (
-          <p style={S.responseText}>{promptText}</p>
-        ) : (
-          <p style={S.placeholderText}>
-            Prompt text is not available for this run yet.
+          <p style={{ ...S.responseText, fontSize: "17px", color: TEXT_MUTED, fontStyle: "italic" }}>
+            {promptText}
           </p>
+        ) : (
+          <p style={S.placeholderText}>Prompt text is not available for this run yet.</p>
         )}
       </div>
     </div>
@@ -798,9 +836,29 @@ function ResponseSection({ text }) {
   if (!text) return null;
   return (
     <div>
-      <p style={S.sectionLabel}>AI Response</p>
-      <div style={S.sectionCard}>
-        <p style={S.responseText}>{text}</p>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
+        <p style={{ ...S.sectionLabel, margin: 0 }}>AI Response</p>
+        <span style={{
+          fontSize: "10px",
+          fontWeight: 700,
+          letterSpacing: "0.1em",
+          textTransform: "uppercase",
+          backgroundColor: BRICK,
+          color: "#fff",
+          padding: "3px 8px",
+          borderRadius: "2px",
+        }}>
+    
+        </span>
+      </div>
+      <div style={{
+        ...S.sectionCard,
+        borderLeft: "3px solid " + BRICK,
+        backgroundColor: "rgba(255,255,255,0.97)",
+        paddingLeft: "18px",
+        boxShadow: "0 24px 48px -32px rgba(8,15,15,0.14)",
+      }}>
+        <p style={{ ...S.responseText, fontSize: "18px", lineHeight: "1.9" }}>{text}</p>
       </div>
     </div>
   );
@@ -871,7 +929,10 @@ function ClaimCard({ claim, isPhone }) {
       </div>
       {claim.evidence_text && (
         <div style={S.evidenceWrap}>
-          <p style={S.evidenceLabel}>Evidence</p>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
+            <p style={{ ...S.evidenceLabel, marginBottom: 0 }}>Evidence</p>
+            <SourceBadge source={claim.source} sourceUrl={claim.source_url} />
+          </div>
           <p style={S.evidenceText}>&ldquo;{claim.evidence_text}&rdquo;</p>
         </div>
       )}
@@ -920,6 +981,10 @@ function App() {
   const [result,   setResult]   = useState(null);
   const [loading,  setLoading]  = useState(false);
   const [error,    setError]    = useState(null);
+
+  const [directQuestion, setDirectQuestion] = useState("");
+  const [directLoading, setDirectLoading]   = useState(false);
+  const [directError, setDirectError]       = useState(null);
 
   const [genDomain, setGenDomain] = useState("general");
   const [genCats, setGenCats]     = useState(() => [...CATEGORIES]);
@@ -1007,6 +1072,40 @@ function App() {
       console.error("Error running evaluation:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const runDirect = async () => {
+    if (!directQuestion.trim()) {
+      setDirectError("Please enter a question.");
+      return;
+    }
+    setDirectLoading(true);
+    setDirectError(null);
+    setResult(null);
+    setError(null);
+
+    try {
+      const response = await fetch(`${API_BASE}/runs/execute-direct`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt_text: directQuestion.trim() }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        const raw = data?.detail || ("Error: " + response.status);
+        setDirectError(sanitizeError(typeof raw === "string" ? raw : JSON.stringify(raw)));
+        return;
+      }
+
+      setResult(data);
+      setDirectError(null);
+    } catch (err) {
+      setDirectError(sanitizeError(err.message));
+    } finally {
+      setDirectLoading(false);
     }
   };
 
@@ -1127,16 +1226,77 @@ function App() {
         </section>
 
         <section style={{ ...S.studio, ...(isPhone ? { padding: "18px 16px 24px" } : {}) }}>
-          <p style={S.studioEyebrow}>The studio</p>
-          <h2 style={S.studioHeading}>Run an analysis</h2>
-          <p style={S.studioIntro}>
-            Two paths: run the model on something already in your library, or author new
-            edge-case prompts first—each has its own panel below.
+          <h2 style={{ ...S.studioHeading, marginBottom: "8px" }}>Run an analysis</h2>
+          <p style={{ ...S.studioIntro, marginBottom: "18px" }}>
+            Ask any question. EdgeProbe gets a response from the model and immediately
+            verifies every claim against live web sources.
           </p>
 
-          <div style={{ ...S.card, ...(isPhone ? { padding: "12px" } : {}) }}>
           <div style={S.workflowStack}>
+
+            {/* ── Direct question panel ── */}
             <div
+              style={{
+                backgroundColor: "rgba(255,255,255,0.96)",
+                border: "1px solid rgba(164,186,183,0.55)",
+                borderRadius: "4px",
+                boxShadow: "0 2px 16px -4px rgba(8,15,15,0.10), 0 1px 4px -2px rgba(8,15,15,0.06)",
+                padding: isPhone ? "16px" : "24px 28px 20px",
+                width: "100%",
+                boxSizing: "border-box",
+              }}
+            >
+              <div style={S.inputBlock}>
+                <textarea
+                  rows={isPhone ? 3 : 5}
+                  placeholder="Ask anything — e.g. What caused the 2008 financial crisis?"
+                  value={directQuestion}
+                  onChange={(e) => { setDirectQuestion(e.target.value); setDirectError(null); }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && !directLoading && directQuestion.trim()) {
+                      runDirect();
+                    }
+                  }}
+                  style={{
+                    ...S.input,
+                    flex: "unset",
+                    width: "100%",
+                    minHeight: isPhone ? "80px" : "120px",
+                    resize: "vertical",
+                    lineHeight: "1.7",
+                    padding: "16px 18px",
+                    fontSize: "17px",
+                    border: "1px solid rgba(164,186,183,0.5)",
+                    borderRadius: "3px",
+                    backgroundColor: PAPER,
+                  }}
+                  onFocus={(e) => (e.target.style.borderColor = ACCENT_FOCUS)}
+                  onBlur={(e)  => (e.target.style.borderColor = "rgba(164,186,183,0.5)")}
+                />
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "10px" }}>
+                  <button
+                    onClick={runDirect}
+                    disabled={directLoading || !directQuestion.trim()}
+                    style={{
+                      ...S.btnBase,
+                      ...(isPhone ? { width: "100%" } : {}),
+                      ...((directLoading || !directQuestion.trim()) ? S.btnDisabled : {}),
+                    }}
+                  >
+                    {directLoading ? "Analyzing…" : "Ask & Analyze"}
+                  </button>
+                  {!isPhone && (
+                    <p style={{ ...S.inputHelper, margin: 0, fontSize: "13px" }}>
+                      ⌘ Enter or Ctrl Enter to submit
+                    </p>
+                  )}
+                </div>
+                {directError && <div style={S.errorBox}>{directError}</div>}
+              </div>
+            </div>
+
+            {/* ── Saved prompt panel (commented out) ── */}
+            {/* <div
               style={{
                 ...S.workflowCard,
                 ...S.workflowCardRun,
@@ -1146,78 +1306,47 @@ function App() {
               <p style={{ ...S.workflowCardKicker, color: BRICK }}>Run the model</p>
               <h3 style={S.workflowCardTitle}>Use a saved prompt</h3>
               <p style={S.workflowCardLead}>
-                Choose a row from your database or type a numeric ID, then analyze. This is the
-                path for anything you have already stored.
+                Choose a row from your database or type a numeric ID, then analyze.
               </p>
               <div style={S.inputBlock}>
-            <p style={S.inputLabel}>Saved prompts</p>
-            <select
-              style={S.selectControl}
-              value={selectValue}
-              disabled={listLoading}
-              onChange={(e) => {
-                const v = e.target.value;
-                setPromptId(v);
-                setError(null);
-              }}
-              onFocus={(e) => (e.target.style.borderColor = ACCENT_FOCUS)}
-              onBlur={(e) => (e.target.style.borderColor = "transparent")}
-            >
-              <option value="">— Select a prompt —</option>
-              {prompts.map((p) => (
-                <option key={p.id} value={p.id}>
-                  #{p.id} · {p.domain}/{p.category} — {p.prompt_preview}
-                </option>
-              ))}
-            </select>
-
-            <p style={{ ...S.inputLabel, marginTop: "10px" }}>Prompt ID</p>
-            <p style={S.inputExample}>Or type an ID manually</p>
-            <div style={{ ...S.inputRow, ...(isPhone ? { flexDirection: "column", gap: "10px" } : {}) }}>
-              <input
-                type="number"
-                min={1}
-                placeholder="e.g. 5"
-                value={promptId}
-                onChange={(e) => { setPromptId(e.target.value); setError(null); }}
-                onKeyDown={(e) => e.key === "Enter" && !isDisabled && runEvaluation()}
-                style={{ ...S.input, ...(isPhone ? { width: "100%", flex: "1 1 auto" } : {}) }}
-                onFocus={(e) => (e.target.style.borderColor = ACCENT_FOCUS)}
-                onBlur={(e)  => (e.target.style.borderColor = "transparent")}
-              />
-              <button
-                onClick={runEvaluation}
-                disabled={isDisabled}
-                style={{
-                  ...S.btnBase,
-                  ...(isPhone ? { width: "100%" } : {}),
-                  ...(isDisabled ? S.btnDisabled : {}),
-                }}
-              >
-                {loading ? "Analyzing..." : "Analyze"}
-              </button>
-            </div>
-
-            {error && (
-              <div style={S.errorBox}>
-                {error}
+                <p style={S.inputLabel}>Saved prompts</p>
+                <select style={S.selectControl} value={selectValue} disabled={listLoading}
+                  onChange={(e) => { setPromptId(e.target.value); setError(null); }}
+                  onFocus={(e) => (e.target.style.borderColor = ACCENT_FOCUS)}
+                  onBlur={(e) => (e.target.style.borderColor = "transparent")}>
+                  <option value="">— Select a prompt —</option>
+                  {prompts.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      #{p.id} · {p.domain}/{p.category} — {p.prompt_preview}
+                    </option>
+                  ))}
+                </select>
+                <p style={{ ...S.inputLabel, marginTop: "10px" }}>Prompt ID</p>
+                <p style={S.inputExample}>Or type an ID manually</p>
+                <div style={{ ...S.inputRow, ...(isPhone ? { flexDirection: "column", gap: "10px" } : {}) }}>
+                  <input type="number" min={1} placeholder="e.g. 5" value={promptId}
+                    onChange={(e) => { setPromptId(e.target.value); setError(null); }}
+                    onKeyDown={(e) => e.key === "Enter" && !isDisabled && runEvaluation()}
+                    style={{ ...S.input, ...(isPhone ? { width: "100%", flex: "1 1 auto" } : {}) }}
+                    onFocus={(e) => (e.target.style.borderColor = ACCENT_FOCUS)}
+                    onBlur={(e) => (e.target.style.borderColor = "transparent")} />
+                  <button onClick={runEvaluation} disabled={isDisabled}
+                    style={{ ...S.btnBase, ...(isPhone ? { width: "100%" } : {}), ...(isDisabled ? S.btnDisabled : {}) }}>
+                    {loading ? "Analyzing..." : "Analyze"}
+                  </button>
+                </div>
+                {error && <div style={S.errorBox}>{error}</div>}
+                <div style={S.demoRow}>
+                  <button type="button" style={{ ...S.secondaryBtn, ...(isPhone ? { width: "100%" } : {}) }}
+                    onClick={loadPrompts} disabled={listLoading}>
+                    Refresh list
+                  </button>
+                </div>
               </div>
-            )}
+            </div> */}
 
-            <div style={S.demoRow}>
-              <button
-                type="button"
-                style={{ ...S.secondaryBtn, ...(isPhone ? { width: "100%" } : {}) }}
-                onClick={loadPrompts}
-                disabled={listLoading}
-              >
-                Refresh list
-              </button>
-            </div>
-              </div>
-            </div>
-
-            <div
+            {/* ── Generate prompts panel (commented out) ── */}
+            {/* <div
               style={{
                 ...S.workflowCard,
                 ...S.workflowCardCreate,
@@ -1227,87 +1356,61 @@ function App() {
               <p style={{ ...S.workflowCardKicker, color: "#3d524e" }}>Grow the library</p>
               <h3 style={S.workflowCardTitle}>Generate new prompts</h3>
               <p style={S.workflowCardLead}>
-                Sample adversarial templates by domain and category, then save them to the
-                database. New IDs appear in the list above when you are done.
+                Sample adversarial templates by domain and category, then save them to the database.
               </p>
               <div style={S.genSection}>
-              <div style={S.genGrid}>
-                <div style={S.inlineField}>
-                  <p style={S.smallLabel}>Domain</p>
-                  <select
-                    style={S.selectControl}
-                    value={genDomain}
-                    disabled={genLoading}
-                    onChange={(e) => setGenDomain(e.target.value)}
-                  >
-                    {DOMAINS.map((d) => (
-                      <option key={d} value={d}>{d}</option>
-                    ))}
-                  </select>
-                </div>
-                <div style={S.inlineField}>
-                  <p style={S.smallLabel}>Categories (at least one)</p>
-                  <div style={S.catGrid}>
-                    {CATEGORIES.map((c) => (
-                      <label key={c} style={S.catChip}>
-                        <input
-                          type="checkbox"
-                          checked={genCats.includes(c)}
-                          onChange={() => toggleGenCat(c)}
-                          disabled={genLoading}
-                          style={{ width: "22px", height: "22px", cursor: genLoading ? "not-allowed" : "pointer", flexShrink: 0 }}
-                        />
-                        {c.replace(/_/g, " ")}
-                      </label>
-                    ))}
+                <div style={S.genGrid}>
+                  <div style={S.inlineField}>
+                    <p style={S.smallLabel}>Domain</p>
+                    <select style={S.selectControl} value={genDomain} disabled={genLoading}
+                      onChange={(e) => setGenDomain(e.target.value)}>
+                      {DOMAINS.map((d) => (<option key={d} value={d}>{d}</option>))}
+                    </select>
+                  </div>
+                  <div style={S.inlineField}>
+                    <p style={S.smallLabel}>Categories (at least one)</p>
+                    <div style={S.catGrid}>
+                      {CATEGORIES.map((c) => (
+                        <label key={c} style={S.catChip}>
+                          <input type="checkbox" checked={genCats.includes(c)}
+                            onChange={() => toggleGenCat(c)} disabled={genLoading}
+                            style={{ width: "22px", height: "22px", cursor: genLoading ? "not-allowed" : "pointer", flexShrink: 0 }} />
+                          {c.replace(/_/g, " ")}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                  <div style={{ ...S.inlineField, flexDirection: isPhone ? "column" : "row",
+                    alignItems: isPhone ? "stretch" : "flex-end", gap: "10px" }}>
+                    <div>
+                      <p style={S.smallLabel}>Count</p>
+                      <input type="number" min={1} max={100} value={genCount}
+                        onChange={(e) => setGenCount(e.target.value)} disabled={genLoading}
+                        style={S.countInput} />
+                    </div>
+                    <button type="button" onClick={runGenerate} disabled={genLoading || genCats.length === 0}
+                      style={{ ...S.secondaryBtn, padding: "14px 22px", ...(isPhone ? { width: "100%" } : {}) }}>
+                      {genLoading ? "Generating…" : "Generate & save"}
+                    </button>
                   </div>
                 </div>
-                <div
-                  style={{
-                    ...S.inlineField,
-                    flexDirection: isPhone ? "column" : "row",
-                    alignItems: isPhone ? "stretch" : "flex-end",
-                    gap: "10px",
-                  }}
-                >
-                  <div>
-                    <p style={S.smallLabel}>Count</p>
-                    <input
-                      type="number"
-                      min={1}
-                      max={100}
-                      value={genCount}
-                      onChange={(e) => setGenCount(e.target.value)}
-                      disabled={genLoading}
-                      style={S.countInput}
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={runGenerate}
-                    disabled={genLoading || genCats.length === 0}
-                    style={{ ...S.secondaryBtn, padding: "14px 22px", ...(isPhone ? { width: "100%" } : {}) }}
-                  >
-                    {genLoading ? "Generating…" : "Generate & save"}
-                  </button>
-                </div>
+                {genNotice && (
+                  <p style={genNotice.ok ? S.genOk : { ...S.genOk, color: INK }}>{genNotice.text}</p>
+                )}
               </div>
-              {genNotice && (
-                <p style={genNotice.ok ? S.genOk : { ...S.genOk, color: INK }}>
-                  {genNotice.text}
-                </p>
-              )}
-              </div>
-            </div>
-          </div>
+            </div> */}
           </div>
         </section>
 
         <section style={{ ...S.resultsShell, ...(isPhone ? { padding: "14px 16px 26px" } : {}) }}>
           {result ? (
             <div style={S.resultWrap}>
-              <p style={S.studioEyebrow}>Results</p>
-              <h2 style={{ ...S.studioHeading, marginBottom: "4px" }}>Your last run</h2>
+              <div style={{ marginBottom: "18px" }}>
+                <p style={S.studioEyebrow}>Analysis complete</p>
+                <p style={{ ...S.inputHelper, margin: 0 }}>
+                  Each claim in the response was verified against live web sources.
+                </p>
+              </div>
               <PromptSection   promptText={result.prompt_text} />
               <ResponseSection text={result.response_text} />
               <ScoreSection    score={result.score} isPhone={isPhone} />
@@ -1329,10 +1432,10 @@ function App() {
                     stroke={TEXT_FAINT} strokeWidth="1.25" strokeLinecap="round" />
                 </svg>
               </div>
-              <h3 style={S.emptyHeading}>Awaiting your first run</h3>
+              <h3 style={S.emptyHeading}>Your analysis will appear here</h3>
               <p style={S.emptySub}>
-                Choose or create a prompt above, then analyze. A structured readout will appear
-                here—prompt, model reply, score, and every claim annotated.
+                Type a question above and hit Ask &amp; Analyze. EdgeProbe will show you the
+                model&apos;s response, a hallucination score, and every claim annotated.
               </p>
             </div>
           )}
