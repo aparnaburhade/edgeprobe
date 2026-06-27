@@ -57,9 +57,9 @@ hallucination_score = (raw_penalty / max_penalty) × 100
 ---
 
 ## Example
-![EdgeProbe results view](screenshots/user-question)
-![EdgeProbe results view](screenshots/response)
-![EdgeProbe results view](screenshots/scoring)
+![EdgeProbe results view](screenshots/user-question.png)
+![EdgeProbe results view](screenshots/response.png)
+![EdgeProbe results view](screenshots/scoring.png)
 
 
 
