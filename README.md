@@ -57,14 +57,12 @@ hallucination_score = (raw_penalty / max_penalty) × 100
 ---
 
 ## Example
+![EdgeProbe results view](screenshots/user-question)
+![EdgeProbe results view](screenshots/response)
+![EdgeProbe results view](screenshots/scoring)
 
-**Question:** What can you tell me about Nikola Tesla?
 
-**One extracted claim:** *"Tesla was born on July 10, 1856, in Smiljan, Croatia."*
 
-**Retrieved evidence:** Web search → *"Nikola Tesla was born on July 10, 1856, in Smiljan, Austrian Empire (modern-day Croatia)."*
-
-**Verdict:** `supported` — 94% confidence ✓
 
 ---
 
