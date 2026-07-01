@@ -985,6 +985,7 @@ function App() {
   const [directQuestion, setDirectQuestion] = useState("");
   const [directLoading, setDirectLoading]   = useState(false);
   const [directError, setDirectError]       = useState(null);
+  const [apiKey, setApiKey]                 = useState("");
 
   const [genDomain, setGenDomain] = useState("general");
   const [genCats, setGenCats]     = useState(() => [...CATEGORIES]);
@@ -1023,8 +1024,8 @@ function App() {
     const lower = String(raw).toLowerCase();
     if (lower.includes("not found") || lower.includes("no prompt") || lower.includes("404"))
       return "No prompt found for this ID. Try a valid prompt ID.";
-    if (lower.includes("503") || lower.includes("service unavailable") || lower.includes("openai_api_key"))
-      return "The model is unavailable. Check OPENAI_API_KEY on the server and try again.";
+    if (lower.includes("503") || lower.includes("service unavailable") || lower.includes("openai_api_key") || lower.includes("no openai api key"))
+      return "No API key found. Enter your OpenAI API key in the field above.";
     if (lower.includes("502") || lower.includes("bad gateway") || lower.includes("llm service"))
       return "The AI provider returned an error. Try again in a moment.";
     if (lower.includes("network") || lower.includes("fetch") || lower.includes("failed to fetch"))
@@ -1089,7 +1090,7 @@ function App() {
       const response = await fetch(`${API_BASE}/runs/execute-direct`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt_text: directQuestion.trim() }),
+        body: JSON.stringify({ prompt_text: directQuestion.trim(), api_key: apiKey.trim() || undefined }),
       });
 
       const data = await response.json();
@@ -1247,6 +1248,35 @@ function App() {
               }}
             >
               <div style={S.inputBlock}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                  <label style={{ fontSize: "12px", fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: TEXT_FAINT }}>
+                    OpenAI API Key
+                  </label>
+                  <input
+                    type="password"
+                    placeholder="sk-..."
+                    value={apiKey}
+                    onChange={(e) => setApiKey(e.target.value)}
+                    autoComplete="off"
+                    style={{
+                      ...S.input,
+                      flex: "unset",
+                      width: "100%",
+                      minHeight: "44px",
+                      fontSize: "15px",
+                      padding: "10px 14px",
+                      border: "1px solid rgba(164,186,183,0.5)",
+                      borderRadius: "3px",
+                      backgroundColor: PAPER,
+                      letterSpacing: apiKey ? "0.12em" : "normal",
+                    }}
+                    onFocus={(e) => (e.target.style.borderColor = ACCENT_FOCUS)}
+                    onBlur={(e)  => (e.target.style.borderColor = "rgba(164,186,183,0.5)")}
+                  />
+                  <p style={{ fontSize: "12px", color: TEXT_FAINT, margin: 0 }}>
+                    Your key is used for this request only and is never saved.
+                  </p>
+                </div>
                 <textarea
                   rows={isPhone ? 3 : 5}
                   placeholder="Ask anything — e.g. What caused the 2008 financial crisis?"

@@ -1,18 +1,26 @@
-from dotenv import load_dotenv
+import os
 import json
 from openai import OpenAI
+from dotenv import load_dotenv
 
 load_dotenv()
-client = OpenAI()
 
 
-def verify_claim(claim: str, evidence: str):
+def verify_claim(claim: str, evidence: str, api_key: str | None = None):
     if not evidence or len(evidence.strip()) == 0:
         return {
             "verdict": "unverifiable",
             "confidence": 0.0,
             "reason": "No evidence provided"
         }
+
+    key = api_key or os.getenv("OPENAI_API_KEY")
+    if not key:
+        raise EnvironmentError(
+            "No OpenAI API key provided. Pass your key in the request or set "
+            "OPENAI_API_KEY as an environment variable."
+        )
+    client = OpenAI(api_key=key)
 
     prompt = f"""
 You are a strict fact-checking system.

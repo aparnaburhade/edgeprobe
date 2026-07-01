@@ -18,15 +18,19 @@ logger = logging.getLogger(__name__)
 # Client initialisation
 # ---------------------------------------------------------------------------
 
-def _get_client() -> OpenAI:
-    """Instantiate an OpenAI client using the key from the environment."""
-    api_key = os.getenv("OPENAI_API_KEY")
-    if not api_key:
+def _get_client(api_key: str | None = None) -> OpenAI:
+    """Instantiate an OpenAI client.
+
+    Uses *api_key* if provided, otherwise falls back to the OPENAI_API_KEY
+    environment variable. The key is never stored beyond this function call.
+    """
+    key = api_key or os.getenv("OPENAI_API_KEY")
+    if not key:
         raise EnvironmentError(
-            "OPENAI_API_KEY is not set. "
-            "Export it as an environment variable before starting the server."
+            "No OpenAI API key provided. Pass your key in the request or set "
+            "OPENAI_API_KEY as an environment variable."
         )
-    return OpenAI(api_key=api_key)
+    return OpenAI(api_key=key)
 
 
 # ---------------------------------------------------------------------------
@@ -48,9 +52,10 @@ def _chat(
     model: str = DEFAULT_MODEL,
     temperature: float = DEFAULT_TEMPERATURE,
     max_tokens: int = MAX_TOKENS_RESPONSE,
+    api_key: str | None = None,
 ) -> str:
     """Send a chat completion request and return the assistant message text."""
-    client = _get_client()
+    client = _get_client(api_key=api_key)
     try:
         response = client.chat.completions.create(
             model=model,
@@ -68,7 +73,7 @@ def _chat(
 # Public API
 # ---------------------------------------------------------------------------
 
-def get_model_response(prompt: str) -> str:
+def get_model_response(prompt: str, api_key: str | None = None) -> str:
     """Send *prompt* to the model and return its answer as plain text.
 
     Parameters
@@ -106,10 +111,10 @@ def get_model_response(prompt: str) -> str:
         },
     ]
 
-    return _chat(messages, max_tokens=MAX_TOKENS_RESPONSE)
+    return _chat(messages, max_tokens=MAX_TOKENS_RESPONSE, api_key=api_key)
 
 
-def extract_claims(text: str) -> list[str]:
+def extract_claims(text: str, api_key: str | None = None) -> list[str]:
     """Extract discrete factual claims from *text*.
 
     The model is instructed to return a JSON array of short, self-contained
@@ -154,7 +159,7 @@ def extract_claims(text: str) -> list[str]:
         },
     ]
 
-    raw = _chat(messages, temperature=0.0, max_tokens=MAX_TOKENS_CLAIMS)
+    raw = _chat(messages, temperature=0.0, max_tokens=MAX_TOKENS_CLAIMS, api_key=api_key)
     return _parse_claims(raw)
 
 

@@ -106,6 +106,7 @@ def extract_claims_from_text(
     text: str,
     *,
     use_llm: bool = False,
+    api_key: str | None = None,
 ) -> list[dict[str, Any]]:
     """Extract factual claims from *text* and return them as structured dicts.
 
@@ -135,7 +136,7 @@ def extract_claims_from_text(
         raise ValueError("'text' must be a non-empty string.")
 
     if use_llm:
-        return _extract_via_llm(text)
+        return _extract_via_llm(text, api_key=api_key)
 
     return _extract_via_rules(text)
 
@@ -152,13 +153,13 @@ def _extract_via_rules(text: str) -> list[dict[str, Any]]:
     return claims
 
 
-def _extract_via_llm(text: str) -> list[dict[str, Any]]:
+def _extract_via_llm(text: str, api_key: str | None = None) -> list[dict[str, Any]]:
     """LLM-backed extraction using ``llm_service.extract_claims``."""
     try:
         # Import here to keep this module usable without OpenAI installed.
         from app.services.llm_service import extract_claims  # noqa: PLC0415
 
-        raw_claims: list[str] = extract_claims(text)
+        raw_claims: list[str] = extract_claims(text, api_key=api_key)
         claims = [_to_claim_dict(c) for c in raw_claims if c.strip()]
         logger.debug("LLM-based extraction: %d claims returned.", len(claims))
         return claims
