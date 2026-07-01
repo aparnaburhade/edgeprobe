@@ -1,6 +1,10 @@
 import re
+import time
+import logging
 import requests
 from urllib.parse import quote
+
+logger = logging.getLogger(__name__)
 
 USER_AGENT = "EdgeProbe/1.0"
 SEARCH_URL = "https://en.wikipedia.org/w/api.php"
@@ -40,19 +44,27 @@ def get_top_k_titles(query: str, k: int = 3):
         "srlimit": k,
     }
 
-    response = requests.get(
-        SEARCH_URL,
-        params=params,
-        headers={"User-Agent": USER_AGENT},
-        timeout=10,
-    )
+    for attempt in range(3):
+        response = requests.get(
+            SEARCH_URL,
+            params=params,
+            headers={"User-Agent": USER_AGENT},
+            timeout=10,
+        )
 
-    response.raise_for_status()
-    data = response.json()
+        if response.status_code == 429:
+            wait = 2 ** attempt  # 1s, 2s, 4s
+            logger.warning("Wikipedia rate-limited (429). Retrying in %ds (attempt %d/3).", wait, attempt + 1)
+            time.sleep(wait)
+            continue
 
-    results = data.get("query", {}).get("search", [])
+        response.raise_for_status()
+        data = response.json()
+        results = data.get("query", {}).get("search", [])
+        return [result["title"] for result in results]
 
-    return [result["title"] for result in results]
+    logger.warning("Wikipedia rate-limit persisted after 3 retries. Skipping.")
+    return []
 
 
 def fetch_summary(title: str):
