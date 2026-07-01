@@ -1024,6 +1024,8 @@ function App() {
     const lower = String(raw).toLowerCase();
     if (lower.includes("not found") || lower.includes("no prompt") || lower.includes("404"))
       return "No prompt found for this ID. Try a valid prompt ID.";
+    if (lower.includes("invalid api key") || lower.includes("401") || lower.includes("incorrect api key") || lower.includes("authentication"))
+      return "Invalid API key. Double-check your OpenAI key and try again.";
     if (lower.includes("503") || lower.includes("service unavailable") || lower.includes("openai_api_key") || lower.includes("no openai api key"))
       return "No API key found. Enter your OpenAI API key in the field above.";
     if (lower.includes("502") || lower.includes("bad gateway") || lower.includes("llm service"))
@@ -1079,6 +1081,10 @@ function App() {
   const runDirect = async () => {
     if (!directQuestion.trim()) {
       setDirectError("Please enter a question.");
+      return;
+    }
+    if (!apiKey.trim().startsWith("sk-")) {
+      setDirectError("Please enter a valid OpenAI API key (starts with sk-).");
       return;
     }
     setDirectLoading(true);
