@@ -5,8 +5,9 @@ FastAPI router for executing LLM runs against stored prompts.
 """
 
 import logging
-import uuid 
+import uuid
 from fastapi import APIRouter, HTTPException, status
+from openai import AuthenticationError as OpenAIAuthError
 from pydantic import BaseModel, Field
 from sqlalchemy import text
 
@@ -75,6 +76,11 @@ def execute_run_direct(request: DirectExecuteRequest) -> ExecuteResponse:
             score=score,
         )
 
+    except OpenAIAuthError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid API key. Check your OpenAI key and try again.",
+        )
     except Exception as exc:
         logger.exception("Direct execute failed: %s", exc)
         raise HTTPException(

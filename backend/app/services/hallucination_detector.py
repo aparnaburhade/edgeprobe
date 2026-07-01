@@ -87,8 +87,11 @@ def _evaluate_single_claim(claim: dict[str, Any], api_key: str | None = None) ->
             "retrieval_score": evidence_result.get("retrieval_score", 0),
             "candidates": evidence_result.get("candidates", []),
         }
+    except (EnvironmentError, PermissionError) as exc:
+        # Auth/key errors should not be swallowed — let them surface as 500s
+        raise
     except Exception as exc:
-        logger.exception("Wikipedia-backed verification failed for claim: %s", claim_text)
+        logger.exception("Verification failed for claim: %s", claim_text)
         return {
             "claim_text": claim_text,
             "verdict": "unverifiable",
