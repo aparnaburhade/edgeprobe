@@ -8,6 +8,7 @@ existing route handlers.
 """
 
 import logging
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any
 
 from app.services.verifier import verify_claim
@@ -30,7 +31,7 @@ def _normalise_verdict(raw_verdict: Any) -> str:
     return "unverifiable"
 
 
-def _evaluate_single_claim(claim: dict[str, Any]) -> dict[str, Any]:
+def _evaluate_single_claim(claim: dict[str, Any], api_key: str | None = None) -> dict[str, Any]:
     claim_text = str(claim.get("claim_text", "")).strip()
     if not claim_text:
         return {
@@ -66,7 +67,7 @@ def _evaluate_single_claim(claim: dict[str, Any]) -> dict[str, Any]:
             }
 
         evidence_text = evidence_result.get("evidence", "")
-        verifier_result = verify_claim(claim=claim_text, evidence=evidence_text)
+        verifier_result = verify_claim(claim=claim_text, evidence=evidence_text, api_key=api_key)
 
         confidence_raw = verifier_result.get("confidence", 0.0)
         try:
@@ -101,6 +102,7 @@ def _evaluate_single_claim(claim: dict[str, Any]) -> dict[str, Any]:
 def evaluate_claims(
     claims: list[dict[str, Any]],
     reference_context: str,
+    api_key: str | None = None,
 ) -> list[dict[str, Any]]:
     """Evaluate claims via Wikipedia retrieval + verifier.
 
@@ -111,15 +113,23 @@ def evaluate_claims(
     if not isinstance(claims, list):
         raise ValueError("'claims' must be a list of dicts.")
 
-    results: list[dict[str, Any]] = []
-    for claim in claims:
-        evaluated = _evaluate_single_claim(claim)
-        logger.debug(
-            "claim=%r verdict=%s confidence=%.2f",
-            evaluated["claim_text"][:60],
-            evaluated["verdict"],
-            evaluated["confidence"],
-        )
-        results.append(evaluated)
+    # Run all claims in parallel — each needs a web search + LLM call,
+    # so parallelising cuts total time from (n × latency) to ~1× latency.
+    results: list[dict[str, Any]] = [{}] * len(claims)
+    with ThreadPoolExecutor(max_workers=min(len(claims), 6)) as executor:
+        future_to_index = {
+            executor.submit(_evaluate_single_claim, claim, api_key): i
+            for i, claim in enumerate(claims)
+        }
+        for future in as_completed(future_to_index):
+            i = future_to_index[future]
+            evaluated = future.result()
+            logger.debug(
+                "claim=%r verdict=%s confidence=%.2f",
+                evaluated.get("claim_text", "")[:60],
+                evaluated.get("verdict"),
+                evaluated.get("confidence", 0.0),
+            )
+            results[i] = evaluated
 
     return results

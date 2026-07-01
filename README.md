@@ -4,6 +4,8 @@
 
 EdgeProbe breaks an AI response into individual, verifiable facts — then checks each one against live web sources and returns a structured verdict. Instead of asking *"is this response good?"*, it asks *"which specific claims are supported, which are wrong, and which can't be verified?"*
 
+**Live Demo:** https://your-netlify-url.netlify.app
+
 ---
 
 ## The core idea
