@@ -32,6 +32,7 @@ class ExecuteRequest(BaseModel):
 
 class DirectExecuteRequest(BaseModel):
     prompt_text: str = Field(..., min_length=1, description="The question or prompt to evaluate.", examples=["What caused the 2008 financial crisis?"])
+    api_key: str | None = Field(None, description="OpenAI API key. Used for this request only — never stored.")
 
 
 class ExecuteResponse(BaseModel):
@@ -61,9 +62,10 @@ def execute_run_direct(request: DirectExecuteRequest) -> ExecuteResponse:
         )
 
     try:
-        response_text = get_model_response(prompt_text)
-        claims = extract_claims_from_text(response_text, use_llm=True)
-        evaluated_claims = evaluate_claims(claims, "")
+        user_api_key = request.api_key or None
+        response_text = get_model_response(prompt_text, api_key=user_api_key)
+        claims = extract_claims_from_text(response_text, use_llm=True, api_key=user_api_key)
+        evaluated_claims = evaluate_claims(claims, "", api_key=user_api_key)
         score = compute_score(evaluated_claims)
 
         return ExecuteResponse(
