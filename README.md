@@ -83,11 +83,12 @@ hallucination_score = (raw_penalty / max_penalty) × 100
 ## Features
 
 - **Direct question input** — ask any question; no pre-generated prompts required
+- **Bring-your-own API key** — enter your OpenAI key per request; never stored, logged, or persisted anywhere
 - **LLM-based claim extraction** — coreference resolution, entity grounding, no sentence fragments
-- **Live web search** — Serper API pulls real-time Google results, not just static Wikipedia
+- **Parallel claim verification** — all claims verified simultaneously, cutting latency from O(n) to O(1)
+- **Live web search** — Serper API pulls real-time Google results, with Wikipedia as a fallback
 - **Source attribution** — every claim links back to the page it was verified against
 - **Weighted risk scoring** — contradictions penalised 4× harder than unverifiable claims
-- **Adversarial prompt library** — generate edge-case prompts by domain and failure category (ambiguity, near-fact, misleading context, multi-hop)
 - **Deterministic verification** — `temperature=0` for reproducible verdicts
 
 ---
